@@ -22,7 +22,7 @@ export function useSchedule() {
     } catch (e) {
       console.error("Failed to load blocks from localStorage", e);
     }
-    return INITIAL_SAMPLE_BLOCKS;
+    return [];
   });
 
   const [settings, setSettings] = useState(() => {

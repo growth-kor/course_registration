@@ -64,7 +64,6 @@ export default function App() {
         onOpenAnalyticsModal={() => setIsAnalyticsOpen(true)}
         onOpenAuthModal={() => setIsAuthOpen(true)}
         onOpenBackupModal={() => setIsBackupOpen(true)}
-        onResetSample={resetToSample}
         user={user}
         firebaseStatus={firebaseStatus}
       />

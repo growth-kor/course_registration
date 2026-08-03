@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Calendar, BarChart2, Cloud, FileJson, RefreshCw } from 'lucide-react';
+import { Plus, Calendar, BarChart2, Cloud, FileJson } from 'lucide-react';
 import { calculateCategoryStats } from '../utils/timeUtils';
 
 export function Header({
@@ -10,7 +10,6 @@ export function Header({
   onOpenAnalyticsModal,
   onOpenAuthModal,
   onOpenBackupModal,
-  onResetSample,
   user,
   firebaseStatus
 }) {
@@ -24,7 +23,7 @@ export function Header({
           <h1 className="brand-title">주간 고정 일정 & 자습 플래너</h1>
         </div>
 
-        <div className="auth-status-badge" onClick={onOpenAuthModal} title="클릭하여 Firebase 로그인/설정 관리">
+        <div className="auth-status-badge" onClick={onOpenAuthModal} title="클릭하여 구글 로그인 및 클라우드 동기화">
           {user ? (
             <span className="user-logged-in">
               <Cloud size={16} className="cloud-icon active" />
@@ -34,7 +33,7 @@ export function Header({
           ) : (
             <span className="user-logged-out">
               <Cloud size={16} className="cloud-icon" />
-              <span>{firebaseStatus.isConfigured ? '로그인 (Firebase Sync)' : '로컬 모드 (Firebase 연동)'}</span>
+              <span>로그인 (클라우드 동기화)</span>
               <span className="status-tag local">LOCAL</span>
             </span>
           )}
@@ -75,10 +74,6 @@ export function Header({
 
           <button className="btn" onClick={onOpenBackupModal}>
             <FileJson size={16} /> 백업/복원
-          </button>
-
-          <button className="btn btn-sm" onClick={onResetSample} title="기본 샘플 시간표로 초기화">
-            <RefreshCw size={14} /> 샘플 로드
           </button>
         </div>
       </div>
