@@ -2,8 +2,18 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
-// Default Demo / Local Fallback Configuration
 const LOCAL_STORAGE_KEY_FIREBASE_CFG = 'brutalist_planner_firebase_config';
+
+// User's default Firebase configuration
+export const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBWG8HMnsQw5MZyA7cvFBdoSC0eU1CvvsA",
+  authDomain: "course-registration-f82e3.firebaseapp.com",
+  projectId: "course-registration-f82e3",
+  storageBucket: "course-registration-f82e3.firebasestorage.app",
+  messagingSenderId: "941783175553",
+  appId: "1:941783175553:web:040a8bc77610bce8c29880",
+  measurementId: "G-GMYXG1FH8B"
+};
 
 export function getStoredFirebaseConfig() {
   try {
@@ -12,7 +22,7 @@ export function getStoredFirebaseConfig() {
   } catch (e) {
     console.error("Failed to parse stored firebase config", e);
   }
-  return null;
+  return DEFAULT_FIREBASE_CONFIG;
 }
 
 export function saveFirebaseConfig(config) {
