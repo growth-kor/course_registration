@@ -16,6 +16,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showPlanChangeModal, setShowPlanChangeModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [joinCode, setJoinCode] = useState('');
@@ -251,13 +252,13 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
           <div style={{ padding: '2rem 3rem', display: 'flex', gap: '2rem', flex: 1, overflowY: 'auto' }}>
             {/* Left Column: Navigation Tabs & Create/Join */}
             <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                 <button 
+                  className={`btn ${sidebarTab === 'my_rooms' ? 'btn-primary' : ''}`}
                   onClick={() => setSidebarTab('my_rooms')}
                   style={{ 
                     padding: '1.25rem 1rem', 
-                    border: 'none',
-                    borderBottom: '2px solid var(--border-main)',
+                    border: '2px solid var(--border-main)',
                     background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : 'white',
                     color: 'var(--text-main)',
                     fontWeight: '900',
@@ -266,6 +267,8 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
+                    boxShadow: sidebarTab === 'my_rooms' ? 'none' : 'var(--shadow-hard)',
+                    transform: sidebarTab === 'my_rooms' ? 'translate(2px, 2px)' : 'none',
                     transition: 'all 0.1s ease',
                     textAlign: 'left'
                   }}
@@ -273,10 +276,11 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   <Users size={20} /> 소속된 방
                 </button>
                 <button 
+                  className={`btn ${sidebarTab === 'explore' ? 'btn-primary' : ''}`}
                   onClick={() => setSidebarTab('explore')}
                   style={{ 
                     padding: '1.25rem 1rem', 
-                    border: 'none',
+                    border: '2px solid var(--border-main)',
                     background: sidebarTab === 'explore' ? 'var(--color-primary)' : 'white',
                     color: 'var(--text-main)',
                     fontWeight: '900',
@@ -285,6 +289,8 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
+                    boxShadow: sidebarTab === 'explore' ? 'none' : 'var(--shadow-hard)',
+                    transform: sidebarTab === 'explore' ? 'translate(2px, 2px)' : 'none',
                     transition: 'all 0.1s ease',
                     textAlign: 'left'
                   }}
@@ -444,9 +450,11 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                       gap: '0.5rem'
                     }}
                   >
-                    {isOwner && <span title="방장">👑</span>}
                     {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
-                    {isMe && <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: 'auto' }}>(나)</span>}
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem', fontSize: '0.8rem' }}>
+                      {isOwner && <span style={{ color: '#b91c1c', fontWeight: 'bold' }}>(방장)</span>}
+                      {isMe && <span style={{ color: '#64748b' }}>(나)</span>}
+                    </div>
                   </button>
                   {amIOwner && !isMe && (
                     <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
@@ -467,7 +475,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
                     {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
                     {activeRoom.name}
-                    {activeRoom.ownerId === user.uid && <span title="방장" style={{ fontSize: '1.2rem' }}>👑</span>}
+                    {activeRoom.ownerId === user.uid && <span style={{ fontSize: '1rem', color: '#b91c1c', fontWeight: 'bold' }}>(방장)</span>}
                   </h2>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
@@ -485,30 +493,21 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   </span>
                   
                   {memberScheduleData && memberScheduleData.plans && memberScheduleData.plans.length > 0 && (
-                    <select 
-                      className="input-field"
-                      value={selectedPlanId}
-                      onChange={(e) => {
-                        setSelectedPlanId(e.target.value);
-                        if (activeMemberId === user.uid) {
-                          handleUpdateSharedPlan(e.target.value);
-                        }
-                      }}
-                      style={{ padding: '0.5rem', width: '200px', backgroundColor: activeMemberId === user.uid ? 'var(--color-primary)' : 'white' }}
-                      title={activeMemberId === user.uid ? '선택 시 이 방에 공유되는 내 플랜이 실시간 변경됩니다.' : ''}
-                    >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       {activeMemberId === user.uid ? (
-                        memberScheduleData.plans.map(p => (
-                          <option key={p.id} value={p.id}>[내 공유] {p.name}</option>
-                        ))
+                        <button 
+                          className="btn"
+                          onClick={() => setShowPlanChangeModal(true)}
+                          style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--color-primary)', fontWeight: 'bold' }}
+                        >
+                          공개 시간표 변경 ▾
+                        </button>
                       ) : (
-                        memberScheduleData.plans
-                          .filter(p => p.id === (activeRoom.memberDetails[activeMemberId]?.sharedPlanId || memberScheduleData.plans[0].id))
-                          .map(p => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))
+                        <div style={{ padding: '0.5rem 1rem', border: '2px solid var(--border-main)', backgroundColor: 'var(--bg-main)', fontWeight: 'bold' }}>
+                          {memberScheduleData.plans.find(p => p.id === (activeRoom.memberDetails[activeMemberId]?.sharedPlanId || memberScheduleData.plans[0].id))?.name || '시간표'}
+                        </div>
                       )}
-                    </select>
+                    </div>
                   )}
                 </div>
               </div>
@@ -581,6 +580,58 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '2rem' }}>
               <button className="btn" onClick={() => setShowJoinModal(false)}>취소</button>
               <button className="btn btn-primary" onClick={handleJoinRoom} disabled={!joinCode.trim() || !sharedPlanIdToJoin}>입장</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPlanChangeModal && (
+        <div className="modal-overlay" onClick={() => setShowPlanChangeModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2>공개할 시간표 선택</h2>
+            </div>
+            <p style={{ color: 'var(--text-main)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              이 방({activeRoom?.name})의 사람들에게 보여줄 내 시간표를 선택하세요.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {memberScheduleData?.plans?.map(p => (
+                <label 
+                  key={p.id} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.75rem', 
+                    padding: '1rem', 
+                    border: '2px solid var(--border-main)', 
+                    backgroundColor: selectedPlanId === p.id ? 'var(--color-primary)' : 'white',
+                    cursor: 'pointer',
+                    boxShadow: selectedPlanId === p.id ? 'none' : 'var(--shadow-hard-sm)',
+                    transform: selectedPlanId === p.id ? 'translate(2px, 2px)' : 'none',
+                    transition: 'all 0.1s ease',
+                    fontWeight: 'bold'
+                  }}
+                  onClick={() => {
+                    handleUpdateSharedPlan(p.id);
+                    setShowPlanChangeModal(false);
+                  }}
+                >
+                  <div style={{
+                    width: '20px', height: '20px', 
+                    border: '2px solid var(--border-main)', 
+                    borderRadius: '50%', 
+                    backgroundColor: selectedPlanId === p.id ? 'black' : 'white',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center'
+                  }}>
+                    {selectedPlanId === p.id && <div style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%' }} />}
+                  </div>
+                  {p.name}
+                  {selectedPlanId === p.id && <span style={{ marginLeft: 'auto', fontSize: '0.8rem' }}>(현재 공개 중)</span>}
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button className="btn" onClick={() => setShowPlanChangeModal(false)}>닫기</button>
             </div>
           </div>
         </div>
