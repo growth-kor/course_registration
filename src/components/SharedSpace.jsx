@@ -199,15 +199,6 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
 
     return (
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)' }}>
-          <select 
-            value={selectedPlanId} 
-            onChange={(e) => setSelectedPlanId(e.target.value)}
-            style={{ width: '100%', padding: '0.5rem', fontWeight: 'bold', border: '2px solid var(--border-main)' }}
-          >
-            {memberScheduleData.plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
         <WeeklyGrid
           blocks={sharedBlocks}
           showWeekend={true}
