@@ -94,6 +94,22 @@ export async function updateUserProfile(user, newName) {
   }
 }
 
+export async function updateMemberSharedPlan(roomId, userId, newSharedPlanId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !userId) return false;
+
+  try {
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, {
+      [`memberDetails.${userId}.sharedPlanId`]: newSharedPlanId
+    });
+    return true;
+  } catch (e) {
+    console.error("Error updating member shared plan:", e);
+    return false;
+  }
+}
+
 // Cloud Storage for Schedule Data in Firestore
 export async function saveScheduleToFirestore(userId, scheduleData) {
   const { isConfigured, db } = initFirebase();
@@ -141,7 +157,7 @@ function generateInviteCode() {
   return code;
 }
 
-export async function createRoom(ownerId, ownerName, roomName, isPublic) {
+export async function createRoom(ownerId, ownerName, roomName, isPublic, sharedPlanId) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !ownerId) return null;
 
@@ -157,7 +173,7 @@ export async function createRoom(ownerId, ownerName, roomName, isPublic) {
       createdAt: new Date().toISOString(),
       memberIds: [ownerId],
       memberDetails: {
-        [ownerId]: { name: ownerName, joinedAt: new Date().toISOString() }
+        [ownerId]: { name: ownerName, joinedAt: new Date().toISOString(), sharedPlanId: sharedPlanId || 'default' }
       }
     };
 
@@ -169,7 +185,7 @@ export async function createRoom(ownerId, ownerName, roomName, isPublic) {
   }
 }
 
-export async function joinRoomByCode(inviteCode, userId, userName) {
+export async function joinRoomByCode(inviteCode, userId, userName, sharedPlanId) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !userId) return { success: false, message: 'Not initialized' };
 
@@ -191,7 +207,7 @@ export async function joinRoomByCode(inviteCode, userId, userName) {
     // Update room with new member
     await updateDoc(roomDoc.ref, {
       memberIds: arrayUnion(userId),
-      [`memberDetails.${userId}`]: { name: userName, joinedAt: new Date().toISOString() }
+      [`memberDetails.${userId}`]: { name: userName, joinedAt: new Date().toISOString(), sharedPlanId: sharedPlanId || 'default' }
     });
 
     return { success: true, room: { id: roomDoc.id, ...roomData, memberIds: [...roomData.memberIds, userId] } };

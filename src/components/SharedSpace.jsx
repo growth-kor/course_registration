@@ -3,7 +3,7 @@ import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash } from 'lucide-reac
 import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore } from '../firebase/config';
 import { WeeklyGrid } from './WeeklyGrid';
 
-export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
+export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpenProfileSettings }) {
   const [rooms, setRooms] = useState([]);
   const [publicRooms, setPublicRooms] = useState([]);
   const [sidebarTab, setSidebarTab] = useState('my_rooms'); // 'my_rooms' or 'explore'
@@ -19,6 +19,13 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
   const [newRoomName, setNewRoomName] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [joinCode, setJoinCode] = useState('');
+  const [sharedPlanIdToJoin, setSharedPlanIdToJoin] = useState('');
+
+  useEffect(() => {
+    if (plans && plans.length > 0 && !sharedPlanIdToJoin) {
+      setSharedPlanIdToJoin(plans[0].id);
+    }
+  }, [plans]);
 
   const loadRooms = async () => {
     if (!user) {
@@ -79,7 +86,7 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
-    const room = await createRoom(user.uid, user.displayName || '이름 없음', newRoomName, isPublic);
+    const room = await createRoom(user.uid, user.displayName || '이름 없음', newRoomName, isPublic, sharedPlanIdToJoin);
     if (room) {
       alert(`방이 생성되었습니다! 초대 코드: ${room.inviteCode}`);
       setShowCreateModal(false);
@@ -92,7 +99,7 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
 
   const handleJoinRoom = async () => {
     if (!joinCode.trim()) return;
-    const result = await joinRoomByCode(joinCode.trim(), user.uid, user.displayName || '이름 없음');
+    const result = await joinRoomByCode(joinCode.trim(), user.uid, user.displayName || '이름 없음', sharedPlanIdToJoin);
     if (result.success) {
       alert('방에 참여했습니다.');
       setShowJoinModal(false);
@@ -160,225 +167,268 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
 
   return (
     <div className="shared-space-container" style={{ display: 'flex', height: '100%', backgroundColor: 'transparent' }}>
-      {/* 1. Sidebar for Room List */}
-      <div className="rooms-sidebar" style={{ width: '280px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
-        <div style={{ display: 'flex' }}>
-          <button 
-            onClick={() => setSidebarTab('my_rooms')}
-            style={{ 
-              flex: 1, 
-              padding: '1rem 0.5rem', 
-              border: 'none',
-              borderRight: '2px solid var(--border-main)',
-              borderBottom: sidebarTab === 'my_rooms' ? '4px solid var(--border-main)' : '2px solid var(--border-main)',
-              background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : '#f8fafc',
-              color: 'var(--text-main)',
-              fontWeight: '900',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.1s ease'
-            }}
-          >
-            <Users size={16} /> 소속된 방
-          </button>
-          <button 
-            onClick={() => setSidebarTab('explore')}
-            style={{ 
-              flex: 1, 
-              padding: '1rem 0.5rem', 
-              border: 'none',
-              borderBottom: sidebarTab === 'explore' ? '4px solid var(--border-main)' : '2px solid var(--border-main)',
-              background: sidebarTab === 'explore' ? 'var(--color-primary)' : '#f8fafc',
-              color: 'var(--text-main)',
-              fontWeight: '900',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.1s ease'
-            }}
-          >
-            <Search size={16} /> 공유방 탐색
-          </button>
-        </div>
-        
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {sidebarTab === 'my_rooms' ? (
-            loading ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-main)', fontWeight: 'bold' }}>불러오는 중...</div>
-            ) : rooms.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>참여 중인 방이 없습니다.</div>
-            ) : (
-              rooms.map(room => (
+      {!activeRoom ? (
+        // DASHBOARD VIEW
+        <div className="dashboard-view" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2rem 3rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)' }}>
+            <h1 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Users size={32} /> 공유 시간표 대시보드
+            </h1>
+            {onOpenProfileSettings && (
+              <button 
+                className="btn btn-primary" 
+                onClick={onOpenProfileSettings}
+                style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+              >
+                내 프로필 설정
+              </button>
+            )}
+          </div>
+          
+          <div style={{ padding: '2rem 3rem', display: 'flex', gap: '2rem', flex: 1, overflowY: 'auto' }}>
+            {/* Left Column: Navigation Tabs & Create/Join */}
+            <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)' }}>
                 <button 
-                  key={room.id}
-                  className="btn"
-                  onClick={() => setActiveRoom(room)}
-                  style={{
-                    padding: '1rem',
-                    textAlign: 'left',
-                    backgroundColor: activeRoom?.id === room.id ? 'var(--color-primary)' : 'white',
-                    border: '2px solid var(--border-main)',
-                    boxShadow: activeRoom?.id === room.id ? 'var(--shadow-hard-sm)' : 'none',
-                    transform: activeRoom?.id === room.id ? 'translate(-2px, -2px)' : 'none',
-                    cursor: 'pointer',
+                  onClick={() => setSidebarTab('my_rooms')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    border: 'none',
+                    borderBottom: '2px solid var(--border-main)',
+                    background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : 'white',
+                    color: 'var(--text-main)',
                     fontWeight: '900',
+                    fontSize: '1.1rem',
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    width: '100%'
+                    transition: 'all 0.1s ease',
+                    textAlign: 'left'
                   }}
                 >
-                  <span>{room.isPublic ? <Globe size={14} color="#166534" /> : <Lock size={14} color="#64748b" />}</span>
-                  {room.name}
+                  <Users size={20} /> 소속된 방
                 </button>
-              ))
-            )
-          ) : (
-            loadingExplore ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-main)', fontWeight: 'bold' }}>탐색 중...</div>
-            ) : publicRooms.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>공개된 방이 없습니다.</div>
-            ) : (
-              publicRooms.map(room => {
-                const isMember = rooms.some(r => r.id === room.id);
-                return (
-                  <div 
-                    key={room.id}
-                    style={{
-                      padding: '1rem',
-                      backgroundColor: 'white',
-                      border: '2px solid var(--border-main)',
-                      boxShadow: 'var(--shadow-hard-sm)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.75rem'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900', fontSize: '1.1rem' }}>
-                      <Globe size={18} color="var(--border-main)" /> {room.name}
-                    </div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>멤버: {room.memberIds?.length || 1}명</div>
-                    {isMember ? (
-                      <button className="btn" disabled style={{ width: '100%', background: '#e2e8f0', color: '#64748b' }}>이미 참여 중</button>
-                    ) : (
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ width: '100%', justifyContent: 'center' }}
-                        onClick={async () => {
-                          const result = await joinRoomByCode(room.inviteCode, user.uid, user.displayName || '이름 없음');
-                          if (result.success) {
-                            alert('방에 참여했습니다.');
-                            setSidebarTab('my_rooms');
-                            loadRooms();
-                          } else {
-                            alert(result.message);
-                          }
-                        }}
-                      >
-                        입장하기
-                      </button>
-                    )}
+                <button 
+                  onClick={() => setSidebarTab('explore')}
+                  style={{ 
+                    padding: '1.25rem 1rem', 
+                    border: 'none',
+                    background: sidebarTab === 'explore' ? 'var(--color-primary)' : 'white',
+                    color: 'var(--text-main)',
+                    fontWeight: '900',
+                    fontSize: '1.1rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    transition: 'all 0.1s ease',
+                    textAlign: 'left'
+                  }}
+                >
+                  <Search size={20} /> 공유방 탐색
+                </button>
+              </div>
+
+              <div style={{ padding: '1.5rem', backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+                  <Plus size={18} /> 새 방 만들기
+                </button>
+                <button className="btn" onClick={() => setShowJoinModal(true)} style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+                  <Key size={18} /> 코드로 입장
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column: Grid of Rooms */}
+            <div style={{ flex: 1 }}>
+              {sidebarTab === 'my_rooms' ? (
+                loading ? (
+                  <div style={{ padding: '3rem', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-main)' }}>방 목록을 불러오는 중...</div>
+                ) : rooms.length === 0 ? (
+                  <div style={{ padding: '4rem', textAlign: 'center', backgroundColor: 'white', border: '2px dashed var(--border-main)' }}>
+                    <Users size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
+                    <h2 style={{ marginBottom: '1rem' }}>참여 중인 공유방이 없습니다.</h2>
+                    <p style={{ color: '#64748b' }}>새로운 방을 만들거나 초대 코드로 입장해 보세요!</p>
                   </div>
-                );
-              })
-            )
-          )}
-        </div>
-
-        <div style={{ padding: '1rem', borderTop: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', gap: '0.75rem', backgroundColor: 'white' }}>
-          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ width: '100%', justifyContent: 'center' }}>
-            <Plus size={16} /> 새 방 만들기
-          </button>
-          <button className="btn" onClick={() => setShowJoinModal(true)} style={{ width: '100%', justifyContent: 'center' }}>
-            <Key size={16} /> 코드로 입장
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Middle Panel for Member List (only shown when a room is active) */}
-      {activeRoom && (
-        <div className="members-sidebar" style={{ width: '220px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
-          <div style={{ padding: '1.25rem 1rem', borderBottom: '2px solid var(--border-main)', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-main)' }}>
-            <Users size={18} /> 멤버 목록 ({activeRoom.memberIds?.length || 0}명)
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    {rooms.map(room => {
+                      const myDetails = room.memberDetails[user.uid] || {};
+                      const mySharedPlanName = plans?.find(p => p.id === myDetails.sharedPlanId)?.name || '기본 플랜';
+                      return (
+                        <div 
+                          key={room.id}
+                          style={{
+                            padding: '1.5rem',
+                            backgroundColor: 'white',
+                            border: '2px solid var(--border-main)',
+                            boxShadow: 'var(--shadow-hard-sm)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '1rem',
+                            cursor: 'pointer',
+                            transition: 'transform 0.1s'
+                          }}
+                          onClick={() => setActiveRoom(room)}
+                          onMouseEnter={(e) => e.currentTarget.style.transform = 'translate(-4px, -4px)'}
+                          onMouseLeave={(e) => e.currentTarget.style.transform = 'translate(0, 0)'}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900', fontSize: '1.2rem' }}>
+                            {room.isPublic ? <Globe size={20} color="#166534" /> : <Lock size={20} color="#64748b" />}
+                            {room.name}
+                          </div>
+                          <div style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: 'bold' }}>멤버: {room.memberIds?.length || 1}명</div>
+                          <div style={{ fontSize: '0.9rem', color: '#64748b', backgroundColor: '#f1f5f9', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}>
+                            내 공유 플랜: <strong>{mySharedPlanName}</strong>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+              ) : (
+                loadingExplore ? (
+                  <div style={{ padding: '3rem', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-main)' }}>탐색 중...</div>
+                ) : publicRooms.length === 0 ? (
+                  <div style={{ padding: '4rem', textAlign: 'center', backgroundColor: 'white', border: '2px dashed var(--border-main)' }}>
+                    <Search size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
+                    <h2 style={{ marginBottom: '1rem' }}>공개된 방이 없습니다.</h2>
+                    <p style={{ color: '#64748b' }}>가장 먼저 공개방을 만들어보세요!</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    {publicRooms.map(room => {
+                      const isMember = rooms.some(r => r.id === room.id);
+                      return (
+                        <div 
+                          key={room.id}
+                          style={{
+                            padding: '1.5rem',
+                            backgroundColor: 'white',
+                            border: '2px solid var(--border-main)',
+                            boxShadow: 'var(--shadow-hard-sm)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '1rem'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900', fontSize: '1.2rem' }}>
+                            <Globe size={20} color="var(--border-main)" /> {room.name}
+                          </div>
+                          <div style={{ fontSize: '0.95rem', color: 'var(--text-main)', fontWeight: 'bold' }}>멤버: {room.memberIds?.length || 1}명</div>
+                          {isMember ? (
+                            <button className="btn" disabled style={{ width: '100%', background: '#e2e8f0', color: '#64748b', marginTop: 'auto' }}>이미 참여 중</button>
+                          ) : (
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ width: '100%', justifyContent: 'center', marginTop: 'auto' }}
+                              onClick={() => {
+                                setJoinCode(room.inviteCode);
+                                setShowJoinModal(true);
+                              }}
+                            >
+                              참여하기
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
+              )}
+            </div>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {activeRoom.memberIds.map(mId => (
+        </div>
+      ) : (
+        // ROOM VIEWER VIEW (2-Pane)
+        <>
+          {/* 1. Sidebar for Member List */}
+          <div className="members-sidebar" style={{ width: '280px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+            <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--bg-main)' }}>
               <button 
-                key={mId}
-                className="btn"
-                onClick={() => setActiveMemberId(mId)}
-                style={{
-                  padding: '0.75rem 1rem',
-                  border: '2px solid var(--border-main)',
-                  backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
-                  fontWeight: '900',
-                  boxShadow: activeMemberId === mId ? 'none' : 'var(--shadow-hard-sm)',
-                  transform: activeMemberId === mId ? 'none' : 'translate(-2px, -2px)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="btn" 
+                onClick={() => setActiveRoom(null)} 
+                style={{ width: '100%', justifyContent: 'center', padding: '0.75rem' }}
               >
-                {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
+                ← 대시보드로 돌아가기
               </button>
-            ))}
+            </div>
+            <div style={{ padding: '1.25rem 1rem', borderBottom: '2px solid var(--border-main)', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white' }}>
+              <Users size={18} /> 멤버 목록 ({activeRoom.memberIds?.length || 0}명)
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', backgroundColor: 'var(--bg-main)' }}>
+              {activeRoom.memberIds.map(mId => (
+                <button 
+                  key={mId}
+                  className="btn"
+                  onClick={() => setActiveMemberId(mId)}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    border: '2px solid var(--border-main)',
+                    backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
+                    fontWeight: '900',
+                    boxShadow: activeMemberId === mId ? 'none' : 'var(--shadow-hard-sm)',
+                    transform: activeMemberId === mId ? 'none' : 'translate(-2px, -2px)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
+                  {mId === user.uid && <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: 'auto' }}>(나)</span>}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
 
-      {/* 3. Main Content Area */}
-      <div className="shared-main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
-        {!activeRoom ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900', fontSize: '1.2rem', backgroundColor: 'var(--bg-main)' }}>
-            방을 선택해 주세요
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div className="room-header" style={{ padding: '1.25rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
-                  {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
-                  {activeRoom.name}
-                </h2>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
+          {/* 2. Main Content Area */}
+          <div className="shared-main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <div className="room-header" style={{ padding: '1.25rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
+                    {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
+                    {activeRoom.name}
+                  </h2>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
+                  </div>
+                </div>
+                
+                <div className="member-viewer-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <span style={{ fontWeight: '900', fontSize: '1.1rem' }}>
+                    {activeRoom.memberDetails[activeMemberId]?.name || '알 수 없음'}님의 스케줄
+                  </span>
+                  
+                  {memberScheduleData && memberScheduleData.plans && memberScheduleData.plans.length > 0 && (
+                    <select 
+                      className="input-field"
+                      value={selectedPlanId}
+                      onChange={(e) => setSelectedPlanId(e.target.value)}
+                      style={{ padding: '0.5rem', width: '200px' }}
+                    >
+                      {memberScheduleData.plans
+                        .filter(p => p.id === activeRoom.memberDetails[activeMemberId]?.sharedPlanId || activeMemberId === user.uid)
+                        .map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
               
-              <div className="member-viewer-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <span style={{ fontWeight: '900', fontSize: '1.1rem' }}>
-                  {activeRoom.memberDetails[activeMemberId]?.name || '알 수 없음'}님의 스케줄
-                </span>
-                
-                {memberScheduleData && memberScheduleData.plans && memberScheduleData.plans.length > 0 && (
-                  <select 
-                    className="input-field"
-                    value={selectedPlanId}
-                    onChange={(e) => setSelectedPlanId(e.target.value)}
-                    style={{ padding: '0.5rem', width: '200px' }}
-                  >
-                    {memberScheduleData.plans.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                )}
+              {/* Schedule Viewer */}
+              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)' }}>
+                {renderMemberSchedule()}
               </div>
             </div>
-            
-            {/* Schedule Viewer */}
-            <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)' }}>
-              {renderMemberSchedule()}
-            </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
+
 
       {/* Modals */}
       {showCreateModal && (
@@ -392,14 +442,24 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
               <input type="text" className="input-field" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} placeholder="예: 2024 스터디 그룹" />
             </div>
             <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label className="form-label">공유할 내 플랜(시간표)</label>
+              <select 
+                className="input-field"
+                value={sharedPlanIdToJoin}
+                onChange={e => setSharedPlanIdToJoin(e.target.value)}
+              >
+                {plans?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="form-group" style={{ marginTop: '1rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} />
-                공개방 (누구나 참여 가능)
+                공개방 (누구나 탐색 및 참여 가능)
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '2rem' }}>
               <button className="btn" onClick={() => setShowCreateModal(false)}>취소</button>
-              <button className="btn btn-primary" onClick={handleCreateRoom} disabled={!newRoomName.trim()}>만들기</button>
+              <button className="btn btn-primary" onClick={handleCreateRoom} disabled={!newRoomName.trim() || !sharedPlanIdToJoin}>만들기</button>
             </div>
           </div>
         </div>
@@ -409,15 +469,25 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
         <div className="modal-overlay" onClick={() => setShowJoinModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
-              <h2>초대 코드로 입장</h2>
+              <h2>방 참여하기</h2>
             </div>
             <div className="form-group" style={{ marginTop: '1rem' }}>
               <label className="form-label">초대 코드</label>
               <input type="text" className="input-field" value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="6자리 영문/숫자" style={{ textTransform: 'uppercase' }} />
             </div>
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label className="form-label">공유할 내 플랜(시간표)</label>
+              <select 
+                className="input-field"
+                value={sharedPlanIdToJoin}
+                onChange={e => setSharedPlanIdToJoin(e.target.value)}
+              >
+                {plans?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '2rem' }}>
               <button className="btn" onClick={() => setShowJoinModal(false)}>취소</button>
-              <button className="btn btn-primary" onClick={handleJoinRoom} disabled={!joinCode.trim()}>입장</button>
+              <button className="btn btn-primary" onClick={handleJoinRoom} disabled={!joinCode.trim() || !sharedPlanIdToJoin}>입장</button>
             </div>
           </div>
         </div>

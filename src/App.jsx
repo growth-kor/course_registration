@@ -255,8 +255,10 @@ export default function App() {
         <main className="main-content-area" style={{ padding: 0 }}>
           <SharedSpace 
             user={user} 
+            plans={plans}
             firebaseStatus={firebaseStatus} 
             onRequireLogin={() => setIsAuthOpen(true)}
+            onOpenProfileSettings={() => setIsAuthOpen(true)}
           />
         </main>
       )}
