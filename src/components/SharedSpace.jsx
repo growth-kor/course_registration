@@ -16,6 +16,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   const [roomTab, setRoomTab] = useState('schedule'); // 'schedule' or 'board'
   const [posts, setPosts] = useState([]);
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostCategory, setNewPostCategory] = useState('일반');
   const [loadingPosts, setLoadingPosts] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -113,9 +114,10 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
 
   const handleAddPost = async () => {
     if (!newPostContent.trim() || !activeRoom) return;
-    const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostContent.trim());
+    const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostCategory, newPostContent.trim());
     if (post) {
       setNewPostContent('');
+      setNewPostCategory('일반');
       loadPosts();
     } else {
       alert("글 작성에 실패했습니다.");
@@ -583,7 +585,20 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     {/* Board UI */}
                     <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                       <div style={{ backgroundColor: 'white', padding: '1.5rem', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)' }}>
-                        <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MessageSquare size={20} /> 새 글 작성</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MessageSquare size={20} /> 새 글 작성</h3>
+                          <select 
+                            className="input-field" 
+                            value={newPostCategory} 
+                            onChange={e => setNewPostCategory(e.target.value)}
+                            style={{ padding: '0.5rem', width: 'auto', minWidth: '120px' }}
+                          >
+                            {activeRoom.ownerId === user.uid && <option value="공지">공지</option>}
+                            <option value="일반">일반</option>
+                            <option value="질문">질문</option>
+                            <option value="기타">기타</option>
+                          </select>
+                        </div>
                         <textarea 
                           className="input-field" 
                           placeholder="방 멤버들과 공유할 내용을 입력하세요..." 
@@ -610,7 +625,18 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                             <div key={post.id} style={{ backgroundColor: 'white', padding: '1.5rem', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard-sm)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                 <div>
-                                  <div style={{ fontWeight: '900', fontSize: '1.1rem', color: 'var(--text-main)' }}>{post.authorName}</div>
+                                  <div style={{ fontWeight: '900', fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span style={{ 
+                                      fontSize: '0.8rem', 
+                                      padding: '0.2rem 0.5rem', 
+                                      backgroundColor: post.category === '공지' ? 'var(--text-main)' : 'var(--color-primary)', 
+                                      color: post.category === '공지' ? 'white' : 'var(--text-main)',
+                                      border: '2px solid var(--border-main)'
+                                    }}>
+                                      {post.category || '일반'}
+                                    </span>
+                                    {post.authorName}
+                                  </div>
                                   <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(post.createdAt).toLocaleString()}</div>
                                 </div>
                                 {(activeRoom.ownerId === user.uid || post.authorId === user.uid) && (

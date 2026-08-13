@@ -314,7 +314,7 @@ export async function fetchPosts(roomId) {
   }
 }
 
-export async function addPost(roomId, userId, userName, content) {
+export async function addPost(roomId, userId, userName, category, content) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !roomId || !userId || !content) return null;
 
@@ -323,6 +323,7 @@ export async function addPost(roomId, userId, userName, content) {
     const postData = {
       authorId: userId,
       authorName: userName,
+      category: category || '일반',
       content,
       createdAt: new Date().toISOString()
     };
