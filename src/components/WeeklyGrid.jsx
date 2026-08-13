@@ -10,7 +10,11 @@ export function WeeklyGrid({
   gridEndHour = 24,
   hourRowHeight = 60,
   onBlockClick,
-  onEmptySlotClick
+  onEmptySlotClick,
+  isDeleteMode,
+  pendingDeleteBlockIds,
+  selectedEmptySlots = [],
+  categories
 }) {
   const activeDays = showWeekend ? DAYS_OF_WEEK : DAYS_OF_WEEK.slice(0, 5);
 
@@ -32,8 +36,9 @@ export function WeeklyGrid({
   const currentMinute = now.getMinutes();
 
   const isCurrentTimeInGrid = currentHour >= gridStartHour && currentHour < gridEndHour;
-  const currentTimeTopPx = isCurrentTimeInGrid
-    ? ((currentHour - gridStartHour) * 60 + currentMinute) * (hourRowHeight / 60)
+  const totalGridMins = (gridEndHour - gridStartHour) * 60;
+  const currentTimeTopPercent = isCurrentTimeInGrid
+    ? (((currentHour - gridStartHour) * 60 + currentMinute) / totalGridMins) * 100
     : null;
 
   return (
@@ -82,7 +87,6 @@ export function WeeklyGrid({
 
         {/* Day Columns */}
         {activeDays.map(day => {
-          const dayBlocks = blocks.filter(blk => blk.dayOfWeek === day.id);
           const isToday = day.id === currentDayOfWeek;
 
           return (
@@ -92,34 +96,43 @@ export function WeeklyGrid({
               style={{ height: `${hourTicks.length * hourRowHeight}px` }}
             >
               {/* 1-Hour Grid Lines */}
-              {hourTicks.map(hour => (
-                <div
-                  key={hour}
-                  className="grid-hour-cell"
-                  style={{ height: `${hourRowHeight}px` }}
-                  onClick={() => onEmptySlotClick(day.id, `${String(hour).padStart(2, '0')}:00`)}
-                  title={`${day.full} ${String(hour).padStart(2, '0')}:00 블록 추가`}
-                />
-              ))}
-
-              {/* Render Blocks for this Day */}
-              {dayBlocks.map(block => {
-                const style = getBlockGridStyle(block.startTime, block.endTime, gridStartHour, hourRowHeight);
+              {hourTicks.map(hour => {
+                const timeStr = `${String(hour).padStart(2, '0')}:00`;
+                const isSelected = selectedEmptySlots.some(s => s.day === day.id && s.time === timeStr);
                 return (
-                  <BlockItem
-                    key={block.id}
-                    block={block}
-                    style={style}
-                    onClick={onBlockClick}
+                  <div
+                    key={hour}
+                    className={`grid-hour-cell ${isSelected ? 'selected' : ''}`}
+                    style={{ height: `${hourRowHeight}px` }}
+                    onClick={() => onEmptySlotClick(day.id, timeStr)}
                   />
                 );
               })}
 
+              {/* Render Blocks for this Day */}
+              {blocks.filter(Boolean).map(block => {
+                const daySlots = (block.timeSlots || []).filter(ts => ts.dayOfWeek === day.id);
+                return daySlots.map(slot => {
+                  const style = getBlockGridStyle(slot.startTime, slot.endTime, gridStartHour, hourRowHeight);
+                  return (
+                    <BlockItem
+                      key={slot.id}
+                      block={block}
+                      slot={slot}
+                      style={style}
+                      categories={categories}
+                      onClick={onBlockClick}
+                      isPendingDelete={isDeleteMode && pendingDeleteBlockIds.includes(block.id)}
+                    />
+                  );
+                });
+              })}
+
               {/* Current Time Indicator Line */}
-              {isToday && currentTimeTopPx !== null && (
+              {isToday && currentTimeTopPercent !== null && (
                 <div
                   className="current-time-line"
-                  style={{ top: `${currentTimeTopPx}px` }}
+                  style={{ top: `${currentTimeTopPercent}%` }}
                 >
                   <div className="time-indicator-dot" />
                 </div>

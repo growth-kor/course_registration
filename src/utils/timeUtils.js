@@ -27,7 +27,7 @@ export function generate10MinStepOptions(startHour = 6, endHour = 24) {
 }
 
 // Calculate block position (top & height) relative to grid start hour (e.g., 6 AM) and hour row height (e.g. 60px)
-export function getBlockGridStyle(startTime, endTime, gridStartHour = 6, hourRowHeight = 60) {
+export function getBlockGridStyle(startTime, endTime, gridStartHour = 6, hourRowHeight = 60, totalGridHours = 18) {
   const startMins = timeToMinutes(startTime);
   const endMins = timeToMinutes(endTime);
   const gridStartMins = gridStartHour * 60;
@@ -35,15 +35,14 @@ export function getBlockGridStyle(startTime, endTime, gridStartHour = 6, hourRow
   const offsetMins = Math.max(0, startMins - gridStartMins);
   const durationMins = Math.max(10, endMins - startMins);
 
-  // 1 minute = (hourRowHeight / 60) px = 1px if row height is 60px
-  const minuteHeight = hourRowHeight / 60;
+  const totalGridMins = totalGridHours * 60;
 
-  const topPx = offsetMins * minuteHeight;
-  const heightPx = durationMins * minuteHeight;
+  const topPercent = (offsetMins / totalGridMins) * 100;
+  const heightPercent = (durationMins / totalGridMins) * 100;
 
   return {
-    top: `${topPx}px`,
-    height: `${heightPx}px`
+    top: `${topPercent}%`,
+    height: `${heightPercent}%`
   };
 }
 
@@ -59,31 +58,41 @@ export function formatDurationText(startTime, endTime) {
 }
 
 // Calculate total hours by category for statistics
-export function calculateCategoryStats(blocks) {
-  const stats = {
-    class: 0,
-    self_study: 0,
-    routine: 0,
-    other: 0,
-    total: 0
-  };
+export function calculateCategoryStats(blocks, categories) {
+  const stats = { total: 0 };
+  const safeBlocks = Array.isArray(blocks) ? blocks : [];
+  
+  if (categories) {
+    Object.keys(categories).forEach(catId => {
+      stats[catId] = 0;
+    });
+  }
 
-  blocks.forEach(blk => {
-    const mins = Math.max(0, timeToMinutes(blk.endTime) - timeToMinutes(blk.startTime));
-    const hours = mins / 60;
-    if (stats[blk.category] !== undefined) {
+  safeBlocks.forEach(blk => {
+    if (!blk) return;
+    let totalMinsForBlock = 0;
+    if (blk.timeSlots && Array.isArray(blk.timeSlots)) {
+      blk.timeSlots.forEach(slot => {
+        totalMinsForBlock += Math.max(0, timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime));
+      });
+    }
+    const hours = totalMinsForBlock / 60;
+    
+    if (categories && categories[blk.category]) {
       stats[blk.category] += hours;
     } else {
-      stats.other += hours;
+      // fallback to other if deleted or missing
+      if (stats.other !== undefined) stats.other += hours;
     }
     stats.total += hours;
   });
 
-  return {
-    class: Number(stats.class.toFixed(1)),
-    self_study: Number(stats.self_study.toFixed(1)),
-    routine: Number(stats.routine.toFixed(1)),
-    other: Number(stats.other.toFixed(1)),
-    total: Number(stats.total.toFixed(1))
-  };
+  const roundedStats = { total: Number(stats.total.toFixed(1)) };
+  if (categories) {
+    Object.keys(categories).forEach(catId => {
+      roundedStats[catId] = Number((stats[catId] || 0).toFixed(1));
+    });
+  }
+  
+  return roundedStats;
 }

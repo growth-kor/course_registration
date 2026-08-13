@@ -1,44 +1,55 @@
 import React from 'react';
 import { CATEGORIES } from '../constants/presets';
-import { formatDurationText } from '../utils/timeUtils';
+import { formatDurationText, timeToMinutes } from '../utils/timeUtils';
 import { CheckSquare, MapPin, Repeat } from 'lucide-react';
 
-export function BlockItem({ block, style, onClick }) {
-  const categoryInfo = CATEGORIES[block.category] || CATEGORIES.other;
+export function BlockItem({ block, slot, style, categories, onClick, isPendingDelete }) {
+  const categoryInfo = (categories && categories[block.category]) || CATEGORIES.other;
 
-  const totalSubtasks = block.subtasks?.length || 0;
-  const completedSubtasks = block.subtasks?.filter(st => st.completed).length || 0;
+  const durationMins = timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime);
+  const isSmallBlock = durationMins <= 60;
 
   return (
     <div
-      className="block-item"
+      className={`block-item ${isPendingDelete ? 'pending-delete' : ''}`}
       style={{
         ...style,
         backgroundColor: block.color || categoryInfo.defaultColor
       }}
       onClick={() => onClick(block)}
-      title={`${block.title} (${block.startTime} ~ ${block.endTime})`}
+      title={`${block.title} (${slot.startTime} ~ ${slot.endTime})`}
     >
       <div className="block-header">
         <span className="block-icon">{categoryInfo.icon}</span>
         <span className="block-title">{block.title}</span>
-        {block.isFixed && <Repeat size={11} className="fixed-icon" title="매주 고정 반복" />}
       </div>
 
       <div className="block-time">
-        {block.startTime} ~ {block.endTime} ({formatDurationText(block.startTime, block.endTime)})
+        {slot.startTime} ~ {slot.endTime} ({formatDurationText(slot.startTime, slot.endTime)})
       </div>
 
-      {block.location && (
+      {!isSmallBlock && block.location && block.showLocation !== false && (
         <div className="block-location">
           <MapPin size={11} /> {block.location}
         </div>
       )}
 
-      {totalSubtasks > 0 && (
-        <div className="block-subtasks-count">
-          <CheckSquare size={11} />
-          <span>{completedSubtasks}/{totalSubtasks} 완료</span>
+      {/* Add Subtasks display */}
+      {!isSmallBlock && block.subtasks && block.subtasks.length > 0 && block.showSubtasks !== false && (
+        <div className="block-subtasks">
+          {block.subtasks.map(st => (
+            <div key={st.id} className={`block-subtask-item ${st.completed ? 'completed' : ''}`}>
+              {st.completed ? <CheckSquare size={10} className="subtask-icon-checked" /> : <div className="subtask-icon-unchecked" />}
+              <span>{st.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Memo display */}
+      {!isSmallBlock && block.memo && block.showMemo !== false && (
+        <div className="block-memo">
+          {block.memo}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Download, Upload, Copy, Check } from 'lucide-react';
+import { X, Download, Upload, Copy, Check, Printer } from 'lucide-react';
 
-export function BackupModal({ isOpen, onClose, blocks, onImport }) {
+export function BackupModal({ isOpen, onClose, blocks, onImport, currentPlanName }) {
   if (!isOpen) return null;
 
   const [jsonInput, setJsonInput] = useState('');
@@ -17,6 +17,56 @@ export function BackupModal({ isOpen, onClose, blocks, onImport }) {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
+  };
+
+  const handlePrint = (mode) => {
+    const originalTitle = document.title;
+    if (currentPlanName) {
+      document.title = currentPlanName;
+    }
+
+    if (mode === 'bw') {
+      document.body.classList.add('print-bw');
+    } else {
+      document.body.classList.add('print-color');
+    }
+    onClose(); // 모달 닫기
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('print-bw', 'print-color');
+      document.title = originalTitle;
+    }, 300);
+  };
+
+  const handleDownloadCSV = () => {
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+    csvContent += "제목,요일,시작시간,종료시간,카테고리,메모\n";
+    
+    const daysMap = { 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 7: '일' };
+    
+    blocks.forEach(block => {
+      if (block.timeSlots && Array.isArray(block.timeSlots)) {
+        block.timeSlots.forEach(slot => {
+          const row = [
+            `"${(block.title || '').replace(/"/g, '""')}"`,
+            daysMap[slot.dayOfWeek] || '',
+            slot.startTime || '',
+            slot.endTime || '',
+            block.category || '',
+            `"${(block.memo || '').replace(/"/g, '""')}"`
+          ];
+          csvContent += row.join(",") + "\n";
+        });
+      }
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `routine_schedule_backup_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const handleCopyClipboard = () => {
@@ -80,10 +130,19 @@ export function BackupModal({ isOpen, onClose, blocks, onImport }) {
           {/* Export Section */}
           <div className="backup-section">
             <h3>내보내기 (Export)</h3>
-            <p className="sub-desc">현재 작성된 주간 일정 데이터를 파일로 다운로드하거나 복사합니다.</p>
+            <p className="sub-desc">일정 데이터를 백업합니다.</p>
             <div className="action-row">
               <button className="btn btn-primary" onClick={handleDownloadFile}>
                 <Download size={16} /> JSON 파일 다운로드
+              </button>
+              <button className="btn btn-accent" onClick={handleDownloadCSV}>
+                <Download size={16} /> CSV (엑셀) 다운로드
+              </button>
+              <button className="btn" onClick={() => handlePrint('bw')}>
+                <Printer size={16} /> 흑백 인쇄 (프린트)
+              </button>
+              <button className="btn btn-primary" onClick={() => handlePrint('color')}>
+                <Printer size={16} /> 컬러 인쇄 (프린트)
               </button>
               <button className="btn" onClick={handleCopyClipboard}>
                 {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -97,7 +156,7 @@ export function BackupModal({ isOpen, onClose, blocks, onImport }) {
           {/* Import Section */}
           <div className="backup-section">
             <h3>가져오기 및 복원 (Import)</h3>
-            <p className="sub-desc">이전에 백업해둔 JSON 파일을 업로드하거나 텍스트를 붙여넣으세요.</p>
+            <p className="sub-desc">백업 파일을 불러옵니다.</p>
             
             <div className="file-upload-box">
               <label className="btn btn-accent">

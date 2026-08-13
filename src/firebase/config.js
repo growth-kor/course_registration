@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion } from 'firebase/firestore';
 
 const LOCAL_STORAGE_KEY_FIREBASE_CFG = 'brutalist_planner_firebase_config';
 
@@ -98,4 +98,107 @@ export async function loadScheduleFromFirestore(userId) {
     console.error("Error loading schedule from Firestore:", e);
   }
   return null;
+}
+
+// ==========================================
+// Shared Rooms (공유 시간표 방) Functions
+// ==========================================
+
+function generateInviteCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+export async function createRoom(ownerId, ownerName, roomName, isPublic) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !ownerId) return null;
+
+  try {
+    let inviteCode = generateInviteCode();
+    // In a real app, check if inviteCode is unique. For now, assume it's unique enough.
+    
+    const roomData = {
+      name: roomName,
+      isPublic,
+      inviteCode,
+      ownerId,
+      createdAt: new Date().toISOString(),
+      memberIds: [ownerId],
+      memberDetails: {
+        [ownerId]: { name: ownerName, joinedAt: new Date().toISOString() }
+      }
+    };
+
+    const roomRef = await addDoc(collection(db, 'rooms'), roomData);
+    return { id: roomRef.id, ...roomData };
+  } catch (e) {
+    console.error("Error creating room:", e);
+    return null;
+  }
+}
+
+export async function joinRoomByCode(inviteCode, userId, userName) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !userId) return { success: false, message: 'Not initialized' };
+
+  try {
+    const q = query(collection(db, 'rooms'), where('inviteCode', '==', inviteCode));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return { success: false, message: '방 코드를 찾을 수 없습니다.' };
+    }
+
+    const roomDoc = querySnapshot.docs[0];
+    const roomData = roomDoc.data();
+
+    if (roomData.memberIds.includes(userId)) {
+      return { success: false, message: '이미 참여중인 방입니다.' };
+    }
+
+    // Update room with new member
+    await updateDoc(roomDoc.ref, {
+      memberIds: arrayUnion(userId),
+      [`memberDetails.${userId}`]: { name: userName, joinedAt: new Date().toISOString() }
+    });
+
+    return { success: true, room: { id: roomDoc.id, ...roomData, memberIds: [...roomData.memberIds, userId] } };
+  } catch (e) {
+    console.error("Error joining room:", e);
+    return { success: false, message: '방 참여 중 오류가 발생했습니다.' };
+  }
+}
+
+export async function fetchRoomsForUser(userId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !userId) return [];
+
+  try {
+    const q = query(collection(db, 'rooms'), where('memberIds', 'array-contains', userId));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    console.error("Error fetching user rooms:", e);
+    return [];
+  }
+}
+
+export async function fetchPublicRooms() {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db) return [];
+
+  try {
+    const q = query(collection(db, 'rooms'), where('isPublic', '==', true));
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (e) {
+    console.error("Error fetching public rooms:", e);
+    return [];
+  }
 }

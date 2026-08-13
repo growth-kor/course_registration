@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { INITIAL_SAMPLE_BLOCKS } from '../constants/presets';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { INITIAL_SAMPLE_BLOCKS, CATEGORIES as DEFAULT_CATEGORIES } from '../constants/presets';
 import {
   initFirebase,
   getStoredFirebaseConfig,
@@ -11,18 +11,39 @@ import {
 } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 
-const STORAGE_KEY_BLOCKS = 'brutalist_planner_blocks_v1';
+const STORAGE_KEY_PLANS = 'brutalist_planner_plans_v2';
+const STORAGE_KEY_CURRENT_PLAN = 'brutalist_planner_current_plan_v2';
 const STORAGE_KEY_SETTINGS = 'brutalist_planner_settings_v1';
+const STORAGE_KEY_CATEGORIES = 'brutalist_planner_categories_v1';
 
 export function useSchedule() {
-  const [blocks, setBlocks] = useState(() => {
+  const [plans, setPlans] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_BLOCKS);
-      if (saved) return JSON.parse(saved);
+      const savedPlans = localStorage.getItem(STORAGE_KEY_PLANS);
+      if (savedPlans) return JSON.parse(savedPlans);
+      
+      // Migrate legacy blocks
+      const legacyBlocks = localStorage.getItem('brutalist_planner_blocks_v1');
+      if (legacyBlocks) {
+        const blocks = JSON.parse(legacyBlocks);
+        const migratedBlocks = blocks.map(b => {
+          if (b.timeSlots) return b;
+          const { dayOfWeek, startTime, endTime, ...rest } = b;
+          return {
+            ...rest,
+            timeSlots: [{ id: `ts_${Math.random().toString(36).substring(2)}`, dayOfWeek, startTime, endTime }]
+          };
+        });
+        return [{ id: 'default', name: '기본 플랜', blocks: migratedBlocks }];
+      }
     } catch (e) {
-      console.error("Failed to load blocks from localStorage", e);
+      console.error("Failed to load plans from localStorage", e);
     }
-    return [];
+    return [{ id: 'default', name: '기본 플랜', blocks: [] }];
+  });
+
+  const [currentPlanId, setCurrentPlanId] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY_CURRENT_PLAN) || 'default';
   });
 
   const [settings, setSettings] = useState(() => {
@@ -35,17 +56,42 @@ export function useSchedule() {
     return { showWeekend: true, gridStartHour: 6, gridEndHour: 24, hourRowHeight: 60 };
   });
 
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && Object.keys(parsed).length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error("Failed to load categories", e);
+    }
+    return DEFAULT_CATEGORIES;
+  });
+
+  // Keep a ref to the latest categories for syncToCloud to avoid stale closures without needing to update all 14 call sites
+  const categoriesRef = useRef(categories);
+  useEffect(() => {
+    categoriesRef.current = categories;
+    try {
+      localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(categories));
+    } catch (e) {
+      console.error("Error saving categories", e);
+    }
+  }, [categories]);
+
   const [user, setUser] = useState(null);
   const [firebaseStatus, setFirebaseStatus] = useState({ isConfigured: false, loading: true });
 
-  // Save to LocalStorage whenever blocks change
+  // Save to LocalStorage whenever plans change
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_BLOCKS, JSON.stringify(blocks));
+      localStorage.setItem(STORAGE_KEY_PLANS, JSON.stringify(plans));
+      localStorage.setItem(STORAGE_KEY_CURRENT_PLAN, currentPlanId);
     } catch (e) {
-      console.error("Error saving blocks to localStorage", e);
+      console.error("Error saving plans to localStorage", e);
     }
-  }, [blocks]);
+  }, [plans, currentPlanId]);
 
   // Save settings to LocalStorage
   useEffect(() => {
@@ -66,9 +112,20 @@ export function useSchedule() {
         setUser(currentUser);
         if (currentUser) {
           // Cloud Sync: fetch remote schedule
-          const remoteBlocks = await loadScheduleFromFirestore(currentUser.uid);
-          if (remoteBlocks && Array.isArray(remoteBlocks) && remoteBlocks.length > 0) {
-            setBlocks(remoteBlocks);
+          const remotePlansData = await loadScheduleFromFirestore(currentUser.uid);
+          if (remotePlansData && Array.isArray(remotePlansData.plans) && remotePlansData.plans.length > 0) {
+            setPlans(remotePlansData.plans);
+            if (remotePlansData.currentPlanId) {
+              setCurrentPlanId(remotePlansData.currentPlanId);
+            }
+            if (
+              remotePlansData.categories && 
+              typeof remotePlansData.categories === 'object' && 
+              !Array.isArray(remotePlansData.categories) &&
+              Object.keys(remotePlansData.categories).length > 0
+            ) {
+              setCategories(remotePlansData.categories);
+            }
           }
         }
       });
@@ -76,10 +133,10 @@ export function useSchedule() {
     }
   }, []);
 
-  // Sync to Cloud whenever blocks change (if logged in)
-  const syncToCloud = useCallback(async (currentBlocks) => {
+  // Sync to Cloud whenever plans change (if logged in)
+  const syncToCloud = useCallback(async (currentPlans, currentId, currentCategories = categoriesRef.current) => {
     if (user) {
-      await saveScheduleToFirestore(user.uid, currentBlocks);
+      await saveScheduleToFirestore(user.uid, { plans: currentPlans, currentPlanId: currentId, categories: currentCategories });
     }
   }, [user]);
 
@@ -90,87 +147,217 @@ export function useSchedule() {
       subtasks: [],
       memo: '',
       isFixed: true,
+      timeSlots: [],
       ...newBlockData
     };
-    setBlocks(prev => {
-      const updated = [...prev, newBlock];
-      syncToCloud(updated);
-      return updated;
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return { ...p, blocks: [...p.blocks, newBlock] };
+      });
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
+    });
+  };
+
+  const addBlocksBatch = (newBlocksDataArray) => {
+    const newBlocks = newBlocksDataArray.map(data => ({
+      id: `blk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      subtasks: [],
+      memo: '',
+      isFixed: true,
+      timeSlots: [],
+      ...data
+    }));
+    
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return { ...p, blocks: [...p.blocks, ...newBlocks] };
+      });
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
     });
   };
 
   const updateBlock = (id, updatedFields) => {
-    setBlocks(prev => {
-      const updated = prev.map(blk => blk.id === id ? { ...blk, ...updatedFields } : blk);
-      syncToCloud(updated);
-      return updated;
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return {
+          ...p,
+          blocks: p.blocks.map(blk => blk.id === id ? { ...blk, ...updatedFields } : blk)
+        };
+      });
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
     });
   };
 
   const deleteBlock = (id) => {
-    setBlocks(prev => {
-      const updated = prev.filter(blk => blk.id !== id);
-      syncToCloud(updated);
-      return updated;
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return { ...p, blocks: p.blocks.filter(blk => blk.id !== id) };
+      });
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
     });
   };
 
   const toggleSubtask = (blockId, subtaskId) => {
-    setBlocks(prev => {
-      const updated = prev.map(blk => {
-        if (blk.id !== blockId) return blk;
-        const updatedSubtasks = (blk.subtasks || []).map(st => 
-          st.id === subtaskId ? { ...st, completed: !st.completed } : st
-        );
-        return { ...blk, subtasks: updatedSubtasks };
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return {
+          ...p,
+          blocks: p.blocks.map(blk => {
+            if (blk.id !== blockId) return blk;
+            const updatedSubtasks = (blk.subtasks || []).map(st => 
+              st.id === subtaskId ? { ...st, completed: !st.completed } : st
+            );
+            return { ...blk, subtasks: updatedSubtasks };
+          })
+        };
       });
-      syncToCloud(updated);
-      return updated;
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
     });
   };
 
   const addSubtask = (blockId, text) => {
     if (!text.trim()) return;
-    setBlocks(prev => {
-      const updated = prev.map(blk => {
-        if (blk.id !== blockId) return blk;
-        const newSubtask = {
-          id: `st_${Date.now()}`,
-          text: text.trim(),
-          completed: false
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return {
+          ...p,
+          blocks: p.blocks.map(blk => {
+            if (blk.id !== blockId) return blk;
+            const newSubtask = {
+              id: `st_${Date.now()}`,
+              text: text.trim(),
+              completed: false
+            };
+            return { ...blk, subtasks: [...(blk.subtasks || []), newSubtask] };
+          })
         };
-        return { ...blk, subtasks: [...(blk.subtasks || []), newSubtask] };
       });
-      syncToCloud(updated);
-      return updated;
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
     });
   };
 
   const deleteSubtask = (blockId, subtaskId) => {
-    setBlocks(prev => {
-      const updated = prev.map(blk => {
-        if (blk.id !== blockId) return blk;
-        return { ...blk, subtasks: (blk.subtasks || []).filter(st => st.id !== subtaskId) };
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => {
+        if (p.id !== currentPlanId) return p;
+        return {
+          ...p,
+          blocks: p.blocks.map(blk => {
+            if (blk.id !== blockId) return blk;
+            return { ...blk, subtasks: (blk.subtasks || []).filter(st => st.id !== subtaskId) };
+          })
+        };
       });
-      syncToCloud(updated);
-      return updated;
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
     });
   };
 
   const resetToSample = () => {
-    setBlocks(INITIAL_SAMPLE_BLOCKS);
-    syncToCloud(INITIAL_SAMPLE_BLOCKS);
+    const migratedSample = INITIAL_SAMPLE_BLOCKS.map(b => {
+      const { dayOfWeek, startTime, endTime, ...rest } = b;
+      return {
+        ...rest,
+        timeSlots: [{ id: `ts_${Math.random()}`, dayOfWeek, startTime, endTime }]
+      };
+    });
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => p.id === currentPlanId ? { ...p, blocks: migratedSample } : p);
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
+    });
   };
 
   const importBlocks = (newBlocks) => {
     if (Array.isArray(newBlocks)) {
-      setBlocks(newBlocks);
-      syncToCloud(newBlocks);
+      setPlans(prev => {
+        const updatedPlans = prev.map(p => p.id === currentPlanId ? { ...p, blocks: newBlocks } : p);
+        syncToCloud(updatedPlans, currentPlanId);
+        return updatedPlans;
+      });
     }
+  };
+
+  // Plan Management
+  const createPlan = (name) => {
+    const newPlanId = `plan_${Date.now()}`;
+    setPlans(prev => {
+      const updatedPlans = [...prev, { id: newPlanId, name, blocks: [] }];
+      syncToCloud(updatedPlans, newPlanId);
+      return updatedPlans;
+    });
+    setCurrentPlanId(newPlanId);
+  };
+
+  const renamePlan = (id, newName) => {
+    setPlans(prev => {
+      const updatedPlans = prev.map(p => p.id === id ? { ...p, name: newName } : p);
+      syncToCloud(updatedPlans, currentPlanId);
+      return updatedPlans;
+    });
+  };
+
+  const deletePlan = (id) => {
+    if (plans.length <= 1) {
+      alert('최소 한 개의 플랜은 유지해야 합니다.');
+      return;
+    }
+    setPlans(prev => {
+      const updatedPlans = prev.filter(p => p.id !== id);
+      if (currentPlanId === id) {
+        setCurrentPlanId(updatedPlans[0].id);
+        syncToCloud(updatedPlans, updatedPlans[0].id);
+      } else {
+        syncToCloud(updatedPlans, currentPlanId);
+      }
+      return updatedPlans;
+    });
   };
 
   const toggleWeekend = () => {
     setSettings(prev => ({ ...prev, showWeekend: !prev.showWeekend }));
+  };
+
+  const addCategory = (newCategory) => {
+    setCategories(prev => {
+      const updated = { ...prev, [newCategory.id]: newCategory };
+      syncToCloud(plans, currentPlanId, updated);
+      return updated;
+    });
+  };
+
+  const updateCategory = (categoryId, updatedFields) => {
+    setCategories(prev => {
+      if (!prev[categoryId]) return prev;
+      const updated = { ...prev, [categoryId]: { ...prev[categoryId], ...updatedFields } };
+      syncToCloud(plans, currentPlanId, updated);
+      return updated;
+    });
+  };
+
+  const deleteCategory = (categoryId) => {
+    if (['class', 'self_study', 'routine', 'other'].includes(categoryId)) {
+      alert("기본 카테고리는 삭제할 수 없습니다.");
+      return;
+    }
+    setCategories(prev => {
+      const updated = { ...prev };
+      delete updated[categoryId];
+      syncToCloud(plans, currentPlanId, updated);
+      return updated;
+    });
   };
 
   // Firebase Configuration Update
@@ -193,12 +380,27 @@ export function useSchedule() {
     setUser(null);
   };
 
+  const safePlans = Array.isArray(plans) && plans.length > 0 ? plans : [{ id: 'fallback', name: '기본 플랜', blocks: [] }];
+  const currentPlan = safePlans.find(p => p.id === currentPlanId) || safePlans[0];
+  const blocks = Array.isArray(currentPlan?.blocks) ? currentPlan.blocks : [];
+
   return {
+    plans: safePlans,
+    currentPlanId,
+    setCurrentPlanId,
+    createPlan,
+    renamePlan,
+    deletePlan,
     blocks,
     settings,
     user,
     firebaseStatus,
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
     addBlock,
+    addBlocksBatch,
     updateBlock,
     deleteBlock,
     toggleSubtask,

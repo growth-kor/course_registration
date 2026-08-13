@@ -6,13 +6,25 @@ import { BlockModal } from './components/BlockModal';
 import { AuthModal } from './components/AuthModal';
 import { TimeAnalyticsModal } from './components/TimeAnalyticsModal';
 import { BackupModal } from './components/BackupModal';
+import { SharedSpace } from './components/SharedSpace';
+import { Minimize } from 'lucide-react';
 
 export default function App() {
   const {
+    plans,
+    currentPlanId,
+    setCurrentPlanId,
+    createPlan,
+    renamePlan,
+    deletePlan,
     blocks,
     settings,
     user,
     firebaseStatus,
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
     addBlock,
     updateBlock,
     deleteBlock,
@@ -24,25 +36,134 @@ export default function App() {
     handleLogout
   } = useSchedule();
 
+  const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'shared'
+
   // Modal Visibility States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
-  const [defaultSlot, setDefaultSlot] = useState({ day: 1, startTime: '09:00' });
+  const [initialTimeSlots, setInitialTimeSlots] = useState([]);
+  const [selectedEmptySlots, setSelectedEmptySlots] = useState([]);
 
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
 
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [pendingDeleteBlockIds, setPendingDeleteBlockIds] = useState([]);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    const handleKeyDown = (e) => {
+      // Allow 'f' key to toggle fullscreen, but only if not typing in an input
+      if (e.key === 'f' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   // Handlers
-  const handleOpenAddModal = (day = 1, startTime = '09:00') => {
+  const handleOpenAddModalForSelection = () => {
+    if (selectedEmptySlots.length === 0) {
+      setSelectedBlock(null);
+      setInitialTimeSlots([{ id: `ts_${Date.now()}`, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }]);
+      setIsAddModalOpen(true);
+      return;
+    }
+    
+    // Group contiguous slots per day
+    const grouped = {};
+    selectedEmptySlots.forEach(s => {
+      if (!grouped[s.day]) grouped[s.day] = [];
+      grouped[s.day].push(s.time);
+    });
+
+    const mergedSlots = [];
+    Object.keys(grouped).forEach(day => {
+      const times = grouped[day].sort();
+      let currentStart = times[0];
+      let currentEnd = null;
+
+      for (let i = 0; i < times.length; i++) {
+        const t = times[i];
+        const [h, m] = t.split(':').map(Number);
+        const endH = Math.min(24, h + 1);
+        const expectedEnd = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        
+        if (i === times.length - 1) {
+          mergedSlots.push({ id: `ts_${Date.now()}_${Math.random()}`, dayOfWeek: Number(day), startTime: currentStart, endTime: expectedEnd });
+        } else {
+          const nextT = times[i + 1];
+          if (expectedEnd !== nextT) {
+            mergedSlots.push({ id: `ts_${Date.now()}_${Math.random()}`, dayOfWeek: Number(day), startTime: currentStart, endTime: expectedEnd });
+            currentStart = nextT;
+          }
+        }
+      }
+    });
+
     setSelectedBlock(null);
-    setDefaultSlot({ day, startTime });
+    setInitialTimeSlots(mergedSlots);
     setIsAddModalOpen(true);
+    setSelectedEmptySlots([]);
+  };
+
+  const handleEmptySlotClick = (day, time) => {
+    setSelectedEmptySlots(prev => {
+      const exists = prev.find(s => s.day === day && s.time === time);
+      if (exists) {
+        return prev.filter(s => !(s.day === day && s.time === time));
+      } else {
+        return [...prev, { day, time }];
+      }
+    });
   };
 
   const handleBlockClick = (block) => {
-    setSelectedBlock(block);
-    setIsAddModalOpen(true);
+    if (isDeleteMode) {
+      setPendingDeleteBlockIds(prev =>
+        prev.includes(block.id)
+          ? prev.filter(id => id !== block.id)
+          : [...prev, block.id]
+      );
+    } else {
+      setSelectedBlock(block);
+      setIsAddModalOpen(true);
+    }
+  };
+
+  const handleToggleDeleteMode = () => {
+    setIsDeleteMode(prev => !prev);
+    setPendingDeleteBlockIds([]);
+  };
+
+  const handleConfirmDelete = () => {
+    pendingDeleteBlockIds.forEach(id => deleteBlock(id));
+    setIsDeleteMode(false);
+    setPendingDeleteBlockIds([]);
   };
 
   const handleSaveBlock = (blockData) => {
@@ -56,49 +177,114 @@ export default function App() {
   return (
     <div className="app-layout">
       {/* Header Bar */}
-      <Header
+      {!isFullscreen && (
+        <Header
+        plans={plans}
+        currentPlanId={currentPlanId}
+        onSelectPlan={setCurrentPlanId}
+        onCreatePlan={createPlan}
+        onRenamePlan={renamePlan}
+        onDeletePlan={deletePlan}
         blocks={blocks}
+        categories={categories}
         showWeekend={settings.showWeekend}
         onToggleWeekend={toggleWeekend}
-        onOpenAddModal={() => handleOpenAddModal(1, '09:00')}
+        onOpenAddModal={handleOpenAddModalForSelection}
         onOpenAnalyticsModal={() => setIsAnalyticsOpen(true)}
         onOpenAuthModal={() => setIsAuthOpen(true)}
         onOpenBackupModal={() => setIsBackupOpen(true)}
         user={user}
         firebaseStatus={firebaseStatus}
+        isDeleteMode={isDeleteMode}
+        onToggleDeleteMode={() => {
+          setIsDeleteMode(!isDeleteMode);
+          setPendingDeleteBlockIds([]);
+        }}
+        onConfirmDelete={handleConfirmDelete}
+        onToggleFullscreen={toggleFullscreen}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
+      )}
+
+      {/* Floating Exit Button for Full Screen */}
+      {isFullscreen && (
+        <button 
+          className="btn" 
+          onClick={toggleFullscreen}
+          style={{ 
+            position: 'fixed', 
+            bottom: '20px', 
+            right: '20px', 
+            zIndex: 9999, 
+            boxShadow: 'var(--shadow-hard)', 
+            backgroundColor: '#ffffff',
+            border: '2px solid var(--border-main)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}
+        >
+          <Minimize size={16} /> 전체화면 종료
+        </button>
+      )}
 
       {/* Main Grid View */}
-      <main className="main-content-area">
-        <WeeklyGrid
-          blocks={blocks}
-          showWeekend={settings.showWeekend}
-          gridStartHour={settings.gridStartHour}
-          gridEndHour={settings.gridEndHour}
-          hourRowHeight={settings.hourRowHeight}
-          onBlockClick={handleBlockClick}
-          onEmptySlotClick={handleOpenAddModal}
-        />
-      </main>
+      {activeTab === 'personal' ? (
+        <main className="main-content-area">
+          <WeeklyGrid
+            blocks={blocks}
+            showWeekend={settings.showWeekend}
+            gridStartHour={settings.gridStartHour}
+            gridEndHour={settings.gridEndHour}
+            hourRowHeight={settings.hourRowHeight}
+            categories={categories}
+            onBlockClick={handleBlockClick}
+            onEmptySlotClick={handleEmptySlotClick}
+            isDeleteMode={isDeleteMode}
+            pendingDeleteBlockIds={pendingDeleteBlockIds}
+            selectedEmptySlots={selectedEmptySlots}
+          />
+        </main>
+      ) : (
+        <main className="main-content-area" style={{ padding: 0 }}>
+          <SharedSpace 
+            user={user} 
+            firebaseStatus={firebaseStatus} 
+            onRequireLogin={() => setIsAuthOpen(true)}
+          />
+        </main>
+      )}
 
-      {/* Footer Info Banner */}
-      <footer className="footer-bar">
-        <div className="footer-info">
-          <span>🗓️ 1시간 단위 그리드 UI | 10분 단위 정밀 기입 지원</span>
-          <span>⚡ Brutalist Practical Routine Planner</span>
-        </div>
-      </footer>
-
-      {/* Block Create / Edit Modal */}
       <BlockModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        categories={categories}
+        onAddCategory={addCategory}
+        onUpdateCategory={updateCategory}
+        onDeleteCategory={deleteCategory}
         onSave={handleSaveBlock}
         onDelete={deleteBlock}
         initialBlock={selectedBlock}
-        defaultDay={defaultSlot.day}
-        defaultStartTime={defaultSlot.startTime}
+        initialTimeSlots={initialTimeSlots}
       />
+
+      {/* Floating Action Bar for Multi-select */}
+      {selectedEmptySlots.length > 0 && !isDeleteMode && (
+        <div className="floating-action-bar">
+          <span className="selected-count">{selectedEmptySlots.length}칸 선택됨</span>
+          <button className="btn btn-primary" onClick={handleOpenAddModalForSelection}>
+            선택한 시간에 추가
+          </button>
+          <button className="btn" onClick={() => setSelectedEmptySlots([])}>
+            취소
+          </button>
+        </div>
+      )}
 
       {/* Firebase Auth Modal */}
       <AuthModal
@@ -116,6 +302,7 @@ export default function App() {
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
         blocks={blocks}
+        categories={categories}
       />
 
       {/* JSON Backup / Import Modal */}
@@ -124,6 +311,7 @@ export default function App() {
         onClose={() => setIsBackupOpen(false)}
         blocks={blocks}
         onImport={importBlocks}
+        currentPlanName={plans.find(p => p.id === currentPlanId)?.name}
       />
     </div>
   );

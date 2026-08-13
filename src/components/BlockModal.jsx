@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { CATEGORIES, HIGHLIGHT_COLORS, DAYS_OF_WEEK } from '../constants/presets';
+import { CATEGORIES, HIGHLIGHT_COLORS, DAYS_OF_WEEK, PRESET_EMOJIS } from '../constants/presets';
 import { generate10MinStepOptions } from '../utils/timeUtils';
-import { X, Trash2, Plus, Check, MapPin, AlignLeft } from 'lucide-react';
+import { X, Trash2, Plus, Check, MapPin, AlignLeft, Lock, Globe } from 'lucide-react';
 
 export function BlockModal({
   isOpen,
   onClose,
+  categories,
+  onAddCategory,
+  onUpdateCategory,
+  onDeleteCategory,
   onSave,
   onDelete,
   initialBlock,
-  defaultDay = 1,
-  defaultStartTime = '09:00'
+  initialTimeSlots = []
 }) {
   if (!isOpen) return null;
 
@@ -18,49 +21,77 @@ export function BlockModal({
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('self_study');
-  const [dayOfWeek, setDayOfWeek] = useState(defaultDay);
-  const [startTime, setStartTime] = useState(defaultStartTime);
-  const [endTime, setEndTime] = useState('10:30');
+  const [timeSlots, setTimeSlots] = useState([]);
   const [color, setColor] = useState('#ffe600');
   const [location, setLocation] = useState('');
-  const [isFixed, setIsFixed] = useState(true);
+  const [showLocation, setShowLocation] = useState(true);
   const [memo, setMemo] = useState('');
+  const [showMemo, setShowMemo] = useState(true);
   const [subtasks, setSubtasks] = useState([]);
+  const [showSubtasks, setShowSubtasks] = useState(true);
   const [newSubtaskText, setNewSubtaskText] = useState('');
 
   useEffect(() => {
     if (initialBlock) {
       setTitle(initialBlock.title || '');
       setCategory(initialBlock.category || 'self_study');
-      setDayOfWeek(initialBlock.dayOfWeek || 1);
-      setStartTime(initialBlock.startTime || '09:00');
-      setEndTime(initialBlock.endTime || '10:00');
+      setTimeSlots(initialBlock.timeSlots || []);
       setColor(initialBlock.color || '#ffe600');
       setLocation(initialBlock.location || '');
-      setIsFixed(initialBlock.isFixed !== undefined ? initialBlock.isFixed : true);
+      setShowLocation(initialBlock.showLocation !== false);
       setMemo(initialBlock.memo || '');
+      setShowMemo(initialBlock.showMemo !== false);
       setSubtasks(initialBlock.subtasks || []);
+      setShowSubtasks(initialBlock.showSubtasks !== false);
     } else {
       setTitle('');
       setCategory('self_study');
-      setDayOfWeek(defaultDay);
-      setStartTime(defaultStartTime);
-      // Auto set default end time to 1h 30m after start time
-      const [h, m] = defaultStartTime.split(':').map(Number);
-      const endH = Math.min(23, h + 1);
-      setEndTime(`${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-      setColor(CATEGORIES.self_study.defaultColor);
+      setTimeSlots(initialTimeSlots && initialTimeSlots.length > 0 ? initialTimeSlots : [{ id: `ts_${Date.now()}`, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }]);
+      setColor(categories && categories.self_study ? categories.self_study.defaultColor : '#ffe600');
       setLocation('');
-      setIsFixed(true);
+      setShowLocation(true);
       setMemo('');
+      setShowMemo(true);
       setSubtasks([]);
+      setShowSubtasks(true);
     }
-  }, [initialBlock, defaultDay, defaultStartTime, isOpen]);
+  }, [initialBlock, initialTimeSlots, isOpen, categories]);
+
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCatLabel, setNewCatLabel] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('✨');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const handleAddCategorySubmit = () => {
+    if (!newCatLabel.trim()) return;
+    const newId = `cat_${Date.now()}`;
+    const defaultGray = '#cbd5e1';
+    
+    onAddCategory({
+      id: newId,
+      label: newCatLabel.trim(),
+      icon: newCatIcon || '✨',
+      defaultColor: defaultGray,
+      isShared: true
+    });
+    setIsAddingCategory(false);
+    setNewCatLabel('');
+    setCategory(newId);
+    setColor(defaultGray);
+  };
+
+  const updateTimeSlot = (id, field, value) => {
+    setTimeSlots(slots => slots.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
+  const removeTimeSlot = (id) => {
+    setTimeSlots(slots => slots.filter(s => s.id !== id));
+  };
 
   const handleCategoryChange = (catId) => {
     setCategory(catId);
-    if (CATEGORIES[catId]) {
-      setColor(CATEGORIES[catId].defaultColor);
+    if (categories && categories[catId]) {
+      setColor(categories[catId].defaultColor);
     }
   };
 
@@ -87,24 +118,33 @@ export function BlockModal({
       alert('블록 제목을 입력해 주세요.');
       return;
     }
-    if (startTime >= endTime) {
-      alert('종료 시간은 시작 시간보다 이후여야 합니다.');
+    if (timeSlots.length === 0) {
+      alert('최소 하나의 시간대를 설정해 주세요.');
       return;
     }
+    
+    for (const slot of timeSlots) {
+      if (slot.startTime >= slot.endTime) {
+        alert('모든 시간대의 종료 시간은 시작 시간보다 이후여야 합니다.');
+        return;
+      }
+    }
 
-    onSave({
-      ...(initialBlock ? { id: initialBlock.id } : {}),
+    const blockData = {
+      id: initialBlock ? initialBlock.id : null,
       title: title.trim(),
       category,
-      dayOfWeek: Number(dayOfWeek),
-      startTime,
-      endTime,
       color,
+      timeSlots,
       location: location.trim(),
-      isFixed,
+      showLocation,
       memo: memo.trim(),
-      subtasks
-    });
+      showMemo,
+      subtasks,
+      showSubtasks
+    };
+
+    onSave(blockData);
 
     onClose();
   };
@@ -126,77 +166,183 @@ export function BlockModal({
           <div className="form-group">
             <label className="form-label">블록 카테고리</label>
             <div className="category-grid">
-              {Object.values(CATEGORIES).map(cat => (
+              {categories && Object.values(categories).map(cat => (
+                <div key={cat.id} style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    className={`category-btn ${category === cat.id ? 'active' : ''}`}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    style={{ width: '100%', height: '100%' }}
+                  >
+                    <span className="cat-icon">{cat.icon}</span>
+                    <span className="cat-label">{cat.label}</span>
+                  </button>
+                  <button
+                    type="button"
+                    title={cat.isShared ? "공유방에 공개됨" : "비공개 (나만 보기)"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onUpdateCategory) {
+                        onUpdateCategory(cat.id, { isShared: !cat.isShared });
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      left: '-4px',
+                      background: cat.isShared ? '#bbf7d0' : '#f1f5f9',
+                      border: '1px solid var(--border-main)',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 2
+                    }}
+                  >
+                    {cat.isShared ? <Globe size={10} color="#166534" /> : <Lock size={10} color="#64748b" />}
+                  </button>
+                  {!['class', 'self_study', 'routine', 'other'].includes(cat.id) && (
+                    <button
+                      type="button"
+                      className="category-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`'${cat.label}' 카테고리를 삭제하시겠습니까? (이 카테고리를 사용하는 기존 일정은 '기타'로 변경됩니다)`)) {
+                          onDeleteCategory(cat.id);
+                        }
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              
+              {!isAddingCategory ? (
                 <button
                   type="button"
-                  key={cat.id}
-                  className={`category-btn ${category === cat.id ? 'active' : ''}`}
-                  onClick={() => handleCategoryChange(cat.id)}
+                  className="category-btn add-new-cat"
+                  onClick={() => setIsAddingCategory(true)}
+                  style={{ borderStyle: 'dashed', backgroundColor: 'transparent' }}
                 >
-                  <span className="cat-icon">{cat.icon}</span>
-                  <span className="cat-label">{cat.label}</span>
+                  <Plus size={16} style={{ marginRight: '4px' }} /> 카테고리 추가
                 </button>
-              ))}
+              ) : (
+                <div className="new-category-form">
+                  <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.25rem', position: 'relative' }}>
+                    <button
+                      type="button"
+                      className="input-field"
+                      style={{ width: '40px', padding: 0, fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backgroundColor: 'white' }}
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    >
+                      {newCatIcon}
+                    </button>
+                    {showEmojiPicker && (
+                      <div className="emoji-picker-dropdown">
+                        {PRESET_EMOJIS.map(emoji => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            className="emoji-btn"
+                            onClick={() => {
+                              setNewCatIcon(emoji);
+                              setShowEmojiPicker(false);
+                            }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <input 
+                      type="text" 
+                      placeholder="카테고리 이름" 
+                      value={newCatLabel} 
+                      onChange={e => setNewCatLabel(e.target.value)} 
+                      className="input-field"
+                      style={{ flex: 1 }}
+                      autoFocus
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button type="button" className="btn btn-sm" onClick={() => setIsAddingCategory(false)}><X size={14} /></button>
+                      <button type="button" className="btn btn-sm btn-primary" onClick={handleAddCategorySubmit} disabled={!newCatLabel.trim()}><Check size={14} /></button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Title */}
           <div className="form-group">
-            <label className="form-label">일정 / 과목 / 자습 제목 *</label>
+            <label className="form-label">일정 제목 *</label>
             <input
               type="text"
               className="input-field"
-              placeholder="예: 알고리즘 자습, 컴퓨터구조 수업, 헬스장"
+              placeholder=""
               value={title}
               onChange={e => setTitle(e.target.value)}
               required
             />
           </div>
 
-          {/* Day of Week */}
+          {/* Time Slots */}
           <div className="form-group">
-            <label className="form-label">요일 선택</label>
-            <div className="days-selector">
-              {DAYS_OF_WEEK.map(d => (
-                <button
-                  type="button"
-                  key={d.id}
-                  className={`day-btn ${Number(dayOfWeek) === d.id ? 'active' : ''}`}
-                  onClick={() => setDayOfWeek(d.id)}
-                >
-                  {d.short}
-                </button>
+            <label className="form-label">요일 및 시간대 설정</label>
+            <div className="time-slots-list">
+              {timeSlots.map(slot => (
+                <div key={slot.id} className="time-slot-row-ui">
+                  <select
+                    className="select-field sm"
+                    value={slot.dayOfWeek}
+                    onChange={e => updateTimeSlot(slot.id, 'dayOfWeek', Number(e.target.value))}
+                  >
+                    {DAYS_OF_WEEK.map(d => (
+                      <option key={d.id} value={d.id}>{d.short}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="select-field sm"
+                    value={slot.startTime}
+                    onChange={e => updateTimeSlot(slot.id, 'startTime', e.target.value)}
+                  >
+                    {timeOptions.map(t => <option key={`s_${t}`} value={t}>{t}</option>)}
+                  </select>
+                  <span className="time-separator">~</span>
+                  <select
+                    className="select-field sm"
+                    value={slot.endTime}
+                    onChange={e => updateTimeSlot(slot.id, 'endTime', e.target.value)}
+                  >
+                    {timeOptions.map(t => <option key={`e_${t}`} value={t}>{t}</option>)}
+                  </select>
+                  <button type="button" className="btn-icon-danger" onClick={() => removeTimeSlot(slot.id)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </div>
-          </div>
-
-          {/* 10-Minute Precision Time Selection */}
-          <div className="form-row">
-            <div className="form-group half">
-              <label className="form-label">시작 시간 (10분 단위)</label>
-              <select
-                className="select-field"
-                value={startTime}
-                onChange={e => setStartTime(e.target.value)}
-              >
-                {timeOptions.map(t => (
-                  <option key={`start_${t}`} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group half">
-              <label className="form-label">종료 시간 (10분 단위)</label>
-              <select
-                className="select-field"
-                value={endTime}
-                onChange={e => setEndTime(e.target.value)}
-              >
-                {timeOptions.map(t => (
-                  <option key={`end_${t}`} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline margin-top"
+              onClick={() => {
+                const last = timeSlots[timeSlots.length - 1];
+                let nextStart = last ? last.endTime : '09:00';
+                let nextEnd = last ? last.endTime : '10:00';
+                // Try to add 1 hour
+                const h = parseInt(nextEnd.split(':')[0], 10);
+                if (h < 23) nextEnd = `${String(h+1).padStart(2, '0')}:${nextEnd.split(':')[1]}`;
+                setTimeSlots([...timeSlots, { id: `ts_${Date.now()}_${Math.random()}`, dayOfWeek: last ? last.dayOfWeek : 1, startTime: nextStart, endTime: nextEnd }]);
+              }}
+            >
+              <Plus size={14} /> 시간대 추가
+            </button>
           </div>
 
           {/* Highlighter Color Picker */}
@@ -215,40 +361,55 @@ export function BlockModal({
                   {color === c.hex && <Check size={14} className="color-check" />}
                 </button>
               ))}
+              {/* Custom Color Picker */}
+              <label 
+                className={`color-circle custom-color-btn ${!HIGHLIGHT_COLORS.some(c => c.hex === color) ? 'selected' : ''}`}
+                style={{ backgroundColor: !HIGHLIGHT_COLORS.some(c => c.hex === color) ? color : '#ffffff' }}
+                title="사용자 지정 색상"
+              >
+                {!HIGHLIGHT_COLORS.some(c => c.hex === color) ? (
+                  <Check size={14} className="color-check" />
+                ) : (
+                  <Plus size={14} style={{ color: 'var(--border-main)' }} />
+                )}
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  style={{ opacity: 0, position: 'absolute', width: 0, height: 0 }}
+                />
+              </label>
             </div>
           </div>
 
-          {/* Location & Fixed Toggle */}
-          <div className="form-row">
-            <div className="form-group half">
-              <label className="form-label">장소 (선택)</label>
-              <div className="input-icon-wrapper">
-                <MapPin size={16} className="input-icon" />
-                <input
-                  type="text"
-                  className="input-field with-icon"
-                  placeholder="예: 공학관 301호, 중앙도서관"
-                  value={location}
-                  onChange={e => setLocation(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="form-group half checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={isFixed}
-                  onChange={e => setIsFixed(e.target.checked)}
-                />
-                <span>매주 고정 반복 일정</span>
+          {/* Location */}
+          <div className="form-group">
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>장소 (선택)</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: 'normal', fontSize: '0.7rem' }}>
+                <input type="checkbox" checked={showLocation} onChange={e => setShowLocation(e.target.checked)} /> 달력에 표시
               </label>
+            </label>
+            <div className="input-icon-wrapper">
+              <MapPin size={16} className="input-icon" />
+              <input
+                type="text"
+                className="input-field with-icon"
+                placeholder=""
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+              />
             </div>
           </div>
 
           {/* Subtasks Checklist */}
           <div className="form-group">
-            <label className="form-label">자습/달성 하위 세부 과제 (Checklist)</label>
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>세부 과제</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: 'normal', fontSize: '0.7rem' }}>
+                <input type="checkbox" checked={showSubtasks} onChange={e => setShowSubtasks(e.target.checked)} /> 달력에 표시
+              </label>
+            </label>
             <div className="subtasks-list">
               {subtasks.map(st => (
                 <div key={st.id} className="subtask-row">
@@ -275,13 +436,15 @@ export function BlockModal({
               <input
                 type="text"
                 className="input-field"
-                placeholder="새 체크리스트 항목 입력 (예: 백준 2문제 풀기)"
+                placeholder=""
                 value={newSubtaskText}
                 onChange={e => setNewSubtaskText(e.target.value)}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleAddSubtask();
+                    if (!e.nativeEvent.isComposing) {
+                      handleAddSubtask();
+                    }
                   }
                 }}
               />
@@ -293,12 +456,17 @@ export function BlockModal({
 
           {/* Memo */}
           <div className="form-group">
-            <label className="form-label">메모 / 참고사항</label>
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>메모 / 참고사항</span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontWeight: 'normal', fontSize: '0.7rem' }}>
+                <input type="checkbox" checked={showMemo} onChange={e => setShowMemo(e.target.checked)} /> 달력에 표시
+              </label>
+            </label>
             <div className="input-icon-wrapper">
               <textarea
                 className="textarea-field"
                 rows={2}
-                placeholder="특이사항, 시험 범위, 준비물 등 메모"
+                placeholder=""
                 value={memo}
                 onChange={e => setMemo(e.target.value)}
               />
