@@ -51,6 +51,8 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
     }
   }, [sidebarTab]);
 
+  const [selectedPlanId, setSelectedPlanId] = useState(''); // NEW
+
   useEffect(() => {
     if (activeRoom) {
       // default to owner or self
@@ -65,8 +67,10 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
       const data = await loadScheduleFromFirestore(activeMemberId);
       if (data) {
         setMemberScheduleData(data);
+        setSelectedPlanId(data.currentPlanId || (data.plans && data.plans[0]?.id) || '');
       } else {
         setMemberScheduleData({ plans: [], categories: {} });
+        setSelectedPlanId('');
       }
       setLoadingSchedule(false);
     }
@@ -100,22 +104,31 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
   };
 
   const renderMemberSchedule = () => {
-    if (loadingSchedule) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94a3b8' }}><Loader className="spin" /> 일정 불러오는 중...</div>;
+    if (loadingSchedule) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900' }}><Loader className="spin" style={{ marginRight: '0.5rem' }} /> 일정 불러오는 중...</div>;
     if (!memberScheduleData || !memberScheduleData.plans || memberScheduleData.plans.length === 0) {
-      return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#94a3b8' }}>등록된 일정이 없습니다.</div>;
+      return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900' }}>등록된 일정이 없습니다.</div>;
     }
 
-    const currentPlan = memberScheduleData.plans.find(p => p.id === memberScheduleData.currentPlanId) || memberScheduleData.plans[0];
+    const currentPlan = memberScheduleData.plans.find(p => p.id === selectedPlanId) || memberScheduleData.plans[0];
     const categories = memberScheduleData.categories || {};
     
-    // Filter blocks that belong to shared categories
-    const sharedBlocks = currentPlan.blocks.filter(block => {
+    // transform member's blocks 
+    const sharedBlocks = (currentPlan?.blocks || []).filter(block => {
       const cat = categories[block.category];
       return cat && cat.isShared !== false; // default to true if not specified
     });
 
     return (
       <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)' }}>
+          <select 
+            value={selectedPlanId} 
+            onChange={(e) => setSelectedPlanId(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem', fontWeight: 'bold', border: '2px solid var(--border-main)' }}
+          >
+            {memberScheduleData.plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
         <WeeklyGrid
           blocks={sharedBlocks}
           showWeekend={true}
@@ -147,8 +160,8 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
 
   return (
     <div className="shared-space-container" style={{ display: 'flex', height: '100%', backgroundColor: 'transparent' }}>
-      {/* Sidebar for Room List */}
-      <div className="rooms-sidebar" style={{ width: '300px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
+      {/* 1. Sidebar for Room List */}
+      <div className="rooms-sidebar" style={{ width: '280px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
         <div style={{ display: 'flex' }}>
           <button 
             onClick={() => setSidebarTab('my_rooms')}
@@ -287,7 +300,40 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* 2. Middle Panel for Member List (only shown when a room is active) */}
+      {activeRoom && (
+        <div className="members-sidebar" style={{ width: '220px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
+          <div style={{ padding: '1.25rem 1rem', borderBottom: '2px solid var(--border-main)', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-main)' }}>
+            <Users size={18} /> 멤버 목록 ({activeRoom.memberIds?.length || 0}명)
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {activeRoom.memberIds.map(mId => (
+              <button 
+                key={mId}
+                className="btn"
+                onClick={() => setActiveMemberId(mId)}
+                style={{
+                  padding: '0.75rem 1rem',
+                  border: '2px solid var(--border-main)',
+                  backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
+                  fontWeight: '900',
+                  boxShadow: activeMemberId === mId ? 'none' : 'var(--shadow-hard-sm)',
+                  transform: activeMemberId === mId ? 'none' : 'translate(-2px, -2px)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Main Content Area */}
       <div className="shared-main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
         {!activeRoom ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900', fontSize: '1.2rem', backgroundColor: 'var(--bg-main)' }}>
@@ -295,7 +341,7 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div className="room-header" style={{ padding: '1.5rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="room-header" style={{ padding: '1.25rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
                   {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
@@ -306,26 +352,23 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
                 </div>
               </div>
               
-              <div className="member-selector" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '50%' }}>
-                <span style={{ fontWeight: '900', marginRight: '0.5rem' }}>멤버 일정:</span>
-                {activeRoom.memberIds.map(mId => (
-                  <button 
-                    key={mId}
-                    className="btn"
-                    onClick={() => setActiveMemberId(mId)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      border: '2px solid var(--border-main)',
-                      backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
-                      fontWeight: '900',
-                      boxShadow: activeMemberId === mId ? 'var(--shadow-hard-sm)' : 'none',
-                      transform: activeMemberId === mId ? 'translate(-2px, -2px)' : 'none',
-                      cursor: 'pointer',
-                    }}
+              <div className="member-viewer-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <span style={{ fontWeight: '900', fontSize: '1.1rem' }}>
+                  {activeRoom.memberDetails[activeMemberId]?.name || '알 수 없음'}님의 스케줄
+                </span>
+                
+                {memberScheduleData && memberScheduleData.plans && memberScheduleData.plans.length > 0 && (
+                  <select 
+                    className="input-field"
+                    value={selectedPlanId}
+                    onChange={(e) => setSelectedPlanId(e.target.value)}
+                    style={{ padding: '0.5rem', width: '200px' }}
                   >
-                    {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
-                  </button>
-                ))}
+                    {memberScheduleData.plans.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
             

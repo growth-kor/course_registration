@@ -8,6 +8,7 @@ import { TimeAnalyticsModal } from './components/TimeAnalyticsModal';
 import { BackupModal } from './components/BackupModal';
 import { SharedSpace } from './components/SharedSpace';
 import { Minimize } from 'lucide-react';
+import { updateUserProfile } from './firebase/config';
 
 export default function App() {
   const {
@@ -295,6 +296,14 @@ export default function App() {
         onUpdateKeys={updateFirebaseKeys}
         onGoogleLogin={handleGoogleLogin}
         onLogout={handleLogout}
+        onUpdateProfile={async (newName) => {
+          const success = await updateUserProfile(user, newName);
+          if (success) {
+            alert('이름이 성공적으로 변경되었습니다. 새로고침 시 적용될 수 있습니다.');
+          } else {
+            alert('이름 변경에 실패했습니다.');
+          }
+        }}
       />
 
       {/* Analytics Report Modal */}

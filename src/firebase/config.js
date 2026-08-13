@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion } from 'firebase/firestore';
 
 const LOCAL_STORAGE_KEY_FIREBASE_CFG = 'brutalist_planner_firebase_config';
@@ -63,6 +63,34 @@ export async function logoutUser() {
   const { auth } = initFirebase();
   if (auth) {
     await firebaseSignOut(auth);
+  }
+}
+
+export async function updateUserProfile(user, newName) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !user) return false;
+
+  try {
+    // 1. Update Firebase Auth Profile
+    await updateProfile(user, { displayName: newName });
+
+    // 2. Update user's name in all rooms they belong to
+    const q = query(collection(db, 'rooms'), where('memberIds', 'array-contains', user.uid));
+    const querySnapshot = await getDocs(q);
+    
+    // Process each room individually
+    const promises = querySnapshot.docs.map(roomDoc => {
+      const roomRef = doc(db, 'rooms', roomDoc.id);
+      return updateDoc(roomRef, {
+        [`memberDetails.${user.uid}.name`]: newName
+      });
+    });
+    
+    await Promise.all(promises);
+    return true;
+  } catch (err) {
+    console.error("Error updating user profile:", err);
+    return false;
   }
 }
 
