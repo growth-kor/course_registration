@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash } from 'lucide-react';
-import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom } from '../firebase/config';
+import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Trash2, Send, Calendar } from 'lucide-react';
+import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, fetchPosts, addPost, deletePost } from '../firebase/config';
 import { WeeklyGrid } from './WeeklyGrid';
 
 export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpenProfileSettings }) {
@@ -13,6 +13,10 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   const [activeMemberId, setActiveMemberId] = useState(null);
   const [memberScheduleData, setMemberScheduleData] = useState(null);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
+  const [roomTab, setRoomTab] = useState('schedule'); // 'schedule' or 'board'
+  const [posts, setPosts] = useState([]);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [loadingPosts, setLoadingPosts] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -92,6 +96,43 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
     }
     loadMemberSchedule();
   }, [activeMemberId, activeRoom, user.uid]);
+
+  const loadPosts = async () => {
+    if (!activeRoom) return;
+    setLoadingPosts(true);
+    const p = await fetchPosts(activeRoom.id);
+    setPosts(p);
+    setLoadingPosts(false);
+  };
+
+  useEffect(() => {
+    if (activeRoom && roomTab === 'board') {
+      loadPosts();
+    }
+  }, [activeRoom, roomTab]);
+
+  const handleAddPost = async () => {
+    if (!newPostContent.trim() || !activeRoom) return;
+    const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostContent.trim());
+    if (post) {
+      setNewPostContent('');
+      loadPosts();
+    } else {
+      alert("글 작성에 실패했습니다.");
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!activeRoom) return;
+    if (window.confirm("이 글을 삭제하시겠습니까?")) {
+      const success = await deletePost(activeRoom.id, postId);
+      if (success) {
+        loadPosts();
+      } else {
+        alert("글 삭제에 실패했습니다.");
+      }
+    }
+  };
 
   const handleUpdateSharedPlan = async (newPlanId) => {
     setSelectedPlanId(newPlanId);
@@ -242,7 +283,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
               <button 
                 className="btn btn-primary" 
                 onClick={onOpenProfileSettings}
-                style={{ padding: '0.75rem 1.5rem', fontSize: '1rem' }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
               >
                 내 프로필 설정
               </button>
@@ -257,12 +298,12 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   className={`btn ${sidebarTab === 'my_rooms' ? 'btn-primary' : ''}`}
                   onClick={() => setSidebarTab('my_rooms')}
                   style={{ 
-                    padding: '1.25rem 1rem', 
+                    padding: '0.75rem 1rem', 
                     border: '2px solid var(--border-main)',
                     background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : 'white',
                     color: 'var(--text-main)',
                     fontWeight: '900',
-                    fontSize: '1.1rem',
+                    fontSize: '1rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -279,12 +320,12 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   className={`btn ${sidebarTab === 'explore' ? 'btn-primary' : ''}`}
                   onClick={() => setSidebarTab('explore')}
                   style={{ 
-                    padding: '1.25rem 1rem', 
+                    padding: '0.75rem 1rem', 
                     border: '2px solid var(--border-main)',
                     background: sidebarTab === 'explore' ? 'var(--color-primary)' : 'white',
                     color: 'var(--text-main)',
                     fontWeight: '900',
-                    fontSize: '1.1rem',
+                    fontSize: '1rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -452,14 +493,14 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   >
                     {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem', fontSize: '0.8rem' }}>
-                      {isOwner && <span style={{ color: '#b91c1c', fontWeight: 'bold' }}>(방장)</span>}
+                      {isOwner && <span style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>(방장)</span>}
                       {isMe && <span style={{ color: '#64748b' }}>(나)</span>}
                     </div>
                   </button>
                   {amIOwner && !isMe && (
                     <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
                       <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'white' }} onClick={() => handleTransferOwnership(mId, activeRoom.memberDetails[mId]?.name)}>위임</button>
-                      <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#b91c1c' }} onClick={() => handleKickMember(mId, activeRoom.memberDetails[mId]?.name)}>강퇴</button>
+                      <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'white' }} onClick={() => handleKickMember(mId, activeRoom.memberDetails[mId]?.name)}>강퇴</button>
                     </div>
                   )}
                 </div>
@@ -475,19 +516,37 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
                     {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
                     {activeRoom.name}
-                    {activeRoom.ownerId === user.uid && <span style={{ fontSize: '1rem', color: '#b91c1c', fontWeight: 'bold' }}>(방장)</span>}
+                    {activeRoom.ownerId === user.uid && <span style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>(방장)</span>}
                   </h2>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
                     {activeRoom.ownerId === user.uid ? (
-                      <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#fee2e2', color: '#b91c1c' }} onClick={handleDeleteRoom}>방 폭파(삭제)</button>
+                      <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: 'white' }} onClick={handleDeleteRoom}>방 삭제</button>
                     ) : (
                       <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#f1f5f9' }} onClick={handleLeaveRoom}>방 나가기</button>
                     )}
                   </div>
                 </div>
                 
-                <div className="member-viewer-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+                  <button 
+                    className={`btn ${roomTab === 'schedule' ? 'btn-primary' : ''}`}
+                    onClick={() => setRoomTab('schedule')}
+                    style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', boxShadow: roomTab === 'schedule' ? 'none' : 'var(--shadow-hard-sm)', transform: roomTab === 'schedule' ? 'translate(2px, 2px)' : 'none' }}
+                  >
+                    <Calendar size={18} /> 시간표
+                  </button>
+                  <button 
+                    className={`btn ${roomTab === 'board' ? 'btn-primary' : ''}`}
+                    onClick={() => setRoomTab('board')}
+                    style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', boxShadow: roomTab === 'board' ? 'none' : 'var(--shadow-hard-sm)', transform: roomTab === 'board' ? 'translate(2px, 2px)' : 'none' }}
+                  >
+                    <MessageSquare size={18} /> 게시판
+                  </button>
+                </div>
+
+                {roomTab === 'schedule' ? (
+                  <div className="member-viewer-controls" style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
                   <span style={{ fontWeight: '900', fontSize: '1.1rem' }}>
                     {activeRoom.memberDetails[activeMemberId]?.name || '알 수 없음'}님의 스케줄
                   </span>
@@ -510,11 +569,64 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     </div>
                   )}
                 </div>
+                ) : (
+                  <div style={{ flex: 1 }}></div>
+                )}
               </div>
               
-              {/* Schedule Viewer */}
-              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)' }}>
-                {renderMemberSchedule()}
+              {/* Main Content Viewer */}
+              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)', display: 'flex', flexDirection: 'column' }}>
+                {roomTab === 'schedule' ? (
+                  renderMemberSchedule()
+                ) : (
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '2rem' }}>
+                    {/* Board UI */}
+                    <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                      <div style={{ backgroundColor: 'white', padding: '1.5rem', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)' }}>
+                        <h3 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MessageSquare size={20} /> 새 글 작성</h3>
+                        <textarea 
+                          className="input-field" 
+                          placeholder="방 멤버들과 공유할 내용을 입력하세요..." 
+                          value={newPostContent}
+                          onChange={e => setNewPostContent(e.target.value)}
+                          style={{ minHeight: '100px', resize: 'vertical', width: '100%', padding: '1rem' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                          <button className="btn btn-primary" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={handleAddPost} disabled={!newPostContent.trim()}>
+                            <Send size={16} /> 등록하기
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {loadingPosts ? (
+                          <div style={{ textAlign: 'center', padding: '2rem', fontWeight: 'bold' }}>불러오는 중...</div>
+                        ) : posts.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: 'white', border: '2px solid var(--border-main)', color: 'var(--text-main)', fontWeight: 'bold' }}>
+                            아직 작성된 글이 없습니다. 첫 글을 남겨보세요!
+                          </div>
+                        ) : (
+                          posts.map(post => (
+                            <div key={post.id} style={{ backgroundColor: 'white', padding: '1.5rem', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard-sm)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <div>
+                                  <div style={{ fontWeight: '900', fontSize: '1.1rem', color: 'var(--text-main)' }}>{post.authorName}</div>
+                                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(post.createdAt).toLocaleString()}</div>
+                                </div>
+                                {(activeRoom.ownerId === user.uid || post.authorId === user.uid) && (
+                                  <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.25rem' }} onClick={() => handleDeletePost(post.id)}>
+                                    <Trash2 size={14} /> 삭제
+                                  </button>
+                                )}
+                              </div>
+                              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{post.content}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

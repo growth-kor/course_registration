@@ -23,7 +23,7 @@ export function AuthModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '350px' }}>
         <div className="modal-header">
           <h2 className="modal-title">
             <Cloud size={20} /> 로그인
@@ -36,9 +36,9 @@ export function AuthModal({
         <div className="auth-modal-body">
           <div className="auth-status-card">
             {user ? (
-              <div className="status-box success" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={24} className="icon-success" />
+              <div className="status-box success" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                  <CheckCircle2 size={32} className="icon-success" />
                   <div style={{ flex: 1 }}>
                     {isEditingName ? (
                       <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
@@ -67,22 +67,22 @@ export function AuthModal({
                         <button className="btn btn-sm" onClick={() => setIsEditingName(true)} style={{ padding: '0.1rem 0.4rem', fontSize: '0.8rem' }}>변경</button>
                       </div>
                     )}
-                    <p className="sub-desc" style={{ margin: 0, marginTop: '0.25rem' }}>동기화 중입니다.</p>
+                    <p className="sub-desc" style={{ margin: 0, marginTop: '0.5rem', fontWeight: 'bold' }}>클라우드 동기화 됨</p>
                   </div>
                 </div>
-                <button className="btn btn-sm btn-danger" onClick={onLogout} style={{ marginTop: '0.5rem', alignSelf: 'flex-start' }}>
+                <button className="btn btn-sm btn-danger" onClick={onLogout} style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}>
                   <LogOut size={14} /> 로그아웃
                 </button>
               </div>
             ) : (
-              <div className="status-box">
+              <div className="status-box" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                 <div>
                   <h4>로그인이 필요합니다.</h4>
-                  <p className="sub-desc">
+                  <p className="sub-desc" style={{ marginTop: '0.5rem' }}>
                     로그인하여 데이터를 저장하고 동기화하세요.
                   </p>
                 </div>
-                <button className="btn btn-primary" style={{ marginTop: '0.75rem' }} onClick={onGoogleLogin}>
+                <button className="btn btn-primary" style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }} onClick={onGoogleLogin}>
                   <LogIn size={16} /> 구글 로그인
                 </button>
               </div>

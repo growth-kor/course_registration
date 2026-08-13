@@ -293,3 +293,58 @@ export async function fetchPublicRooms() {
     return [];
   }
 }
+
+// ==========================================
+// Shared Room Board (방 게시판) Functions
+// ==========================================
+
+export async function fetchPosts(roomId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId) return [];
+
+  try {
+    const postsRef = collection(db, 'rooms', roomId, 'posts');
+    const querySnapshot = await getDocs(postsRef);
+    const posts = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt descending (newest first)
+    return posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } catch (e) {
+    console.error("Error fetching posts:", e);
+    return [];
+  }
+}
+
+export async function addPost(roomId, userId, userName, content) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !userId || !content) return null;
+
+  try {
+    const postsRef = collection(db, 'rooms', roomId, 'posts');
+    const postData = {
+      authorId: userId,
+      authorName: userName,
+      content,
+      createdAt: new Date().toISOString()
+    };
+    const newDoc = await addDoc(postsRef, postData);
+    return { id: newDoc.id, ...postData };
+  } catch (e) {
+    console.error("Error adding post:", e);
+    return null;
+  }
+}
+
+export async function deletePost(roomId, postId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId) return false;
+
+  try {
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    await deleteDoc(postRef);
+    return true;
+  } catch (e) {
+    console.error("Error deleting post:", e);
+    return false;
+  }
+}
+
