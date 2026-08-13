@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash } from 'lucide-react';
-import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore } from '../firebase/config';
+import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom } from '../firebase/config';
 import { WeeklyGrid } from './WeeklyGrid';
 
 export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpenProfileSettings }) {
@@ -74,7 +74,15 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
       const data = await loadScheduleFromFirestore(activeMemberId);
       if (data) {
         setMemberScheduleData(data);
-        setSelectedPlanId(data.currentPlanId || (data.plans && data.plans[0]?.id) || '');
+        const memberSharedPlanId = activeRoom?.memberDetails[activeMemberId]?.sharedPlanId;
+        const defaultPlanId = data.plans && data.plans.length > 0 ? data.plans[0].id : '';
+        
+        if (activeMemberId === user.uid) {
+           setSelectedPlanId(memberSharedPlanId || defaultPlanId);
+        } else {
+           const hasSharedPlan = data.plans?.some(p => p.id === memberSharedPlanId);
+           setSelectedPlanId(hasSharedPlan ? memberSharedPlanId : defaultPlanId);
+        }
       } else {
         setMemberScheduleData({ plans: [], categories: {} });
         setSelectedPlanId('');
@@ -82,7 +90,71 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
       setLoadingSchedule(false);
     }
     loadMemberSchedule();
-  }, [activeMemberId]);
+  }, [activeMemberId, activeRoom, user.uid]);
+
+  const handleUpdateSharedPlan = async (newPlanId) => {
+    setSelectedPlanId(newPlanId);
+    if (!activeRoom) return;
+    const success = await updateMemberSharedPlan(activeRoom.id, user.uid, newPlanId);
+    if (success) {
+      loadRooms(); // Refresh to update memberDetails locally
+    }
+  };
+
+  const handleLeaveRoom = async () => {
+    if (!activeRoom) return;
+    if (activeRoom.ownerId === user.uid) {
+      alert("방장입니다. 먼저 방장을 위임하거나 방을 삭제해 주세요.");
+      return;
+    }
+    if (window.confirm("정말로 이 방에서 나가시겠습니까?")) {
+      const success = await removeMember(activeRoom.id, user.uid);
+      if (success) {
+        setActiveRoom(null);
+        loadRooms();
+      } else {
+        alert("오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const handleKickMember = async (targetId, targetName) => {
+    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
+    if (window.confirm(`${targetName}님을 강퇴하시겠습니까?`)) {
+      const success = await removeMember(activeRoom.id, targetId);
+      if (success) {
+        if (activeMemberId === targetId) setActiveMemberId(user.uid);
+        loadRooms();
+      } else {
+        alert("오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const handleTransferOwnership = async (targetId, targetName) => {
+    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
+    if (window.confirm(`정말로 ${targetName}님에게 방장을 위임하시겠습니까? 본인은 일반 멤버가 됩니다.`)) {
+      const success = await transferOwnership(activeRoom.id, targetId);
+      if (success) {
+        loadRooms();
+      } else {
+        alert("오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
+    if (window.confirm("정말로 이 방을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+      const success = await deleteRoom(activeRoom.id);
+      if (success) {
+        setActiveRoom(null);
+        loadRooms();
+      } else {
+        alert("오류가 발생했습니다.");
+      }
+    }
+  };
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
@@ -358,29 +430,41 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
               <Users size={18} /> 멤버 목록 ({activeRoom.memberIds?.length || 0}명)
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', backgroundColor: 'var(--bg-main)' }}>
-              {activeRoom.memberIds.map(mId => (
-                <button 
-                  key={mId}
-                  className="btn"
-                  onClick={() => setActiveMemberId(mId)}
-                  style={{
-                    padding: '0.75rem 1rem',
-                    border: '2px solid var(--border-main)',
-                    backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
-                    fontWeight: '900',
-                    boxShadow: activeMemberId === mId ? 'none' : 'var(--shadow-hard-sm)',
-                    transform: activeMemberId === mId ? 'none' : 'translate(-2px, -2px)',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
-                  {mId === user.uid && <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: 'auto' }}>(나)</span>}
-                </button>
-              ))}
+              {activeRoom.memberIds.map(mId => {
+                const isMe = mId === user.uid;
+                const isOwner = mId === activeRoom.ownerId;
+                const amIOwner = activeRoom.ownerId === user.uid;
+                return (
+                <div key={mId} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <button 
+                    className="btn"
+                    onClick={() => setActiveMemberId(mId)}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      border: '2px solid var(--border-main)',
+                      backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
+                      fontWeight: '900',
+                      boxShadow: activeMemberId === mId ? 'none' : 'var(--shadow-hard-sm)',
+                      transform: activeMemberId === mId ? 'none' : 'translate(-2px, -2px)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    {isOwner && <span title="방장">👑</span>}
+                    {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
+                    {isMe && <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: 'auto' }}>(나)</span>}
+                  </button>
+                  {amIOwner && !isMe && (
+                    <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                      <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'white' }} onClick={() => handleTransferOwnership(mId, activeRoom.memberDetails[mId]?.name)}>위임</button>
+                      <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: '#fee2e2', color: '#b91c1c' }} onClick={() => handleKickMember(mId, activeRoom.memberDetails[mId]?.name)}>강퇴</button>
+                    </div>
+                  )}
+                </div>
+              )})}
             </div>
           </div>
 
@@ -392,9 +476,15 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
                     {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
                     {activeRoom.name}
+                    {activeRoom.ownerId === user.uid && <span title="방장" style={{ fontSize: '1.2rem' }}>👑</span>}
                   </h2>
                   <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
+                    {activeRoom.ownerId === user.uid ? (
+                      <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#fee2e2', color: '#b91c1c' }} onClick={handleDeleteRoom}>방 폭파(삭제)</button>
+                    ) : (
+                      <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#f1f5f9' }} onClick={handleLeaveRoom}>방 나가기</button>
+                    )}
                   </div>
                 </div>
                 
@@ -407,14 +497,26 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     <select 
                       className="input-field"
                       value={selectedPlanId}
-                      onChange={(e) => setSelectedPlanId(e.target.value)}
-                      style={{ padding: '0.5rem', width: '200px' }}
+                      onChange={(e) => {
+                        setSelectedPlanId(e.target.value);
+                        if (activeMemberId === user.uid) {
+                          handleUpdateSharedPlan(e.target.value);
+                        }
+                      }}
+                      style={{ padding: '0.5rem', width: '200px', backgroundColor: activeMemberId === user.uid ? 'var(--color-primary)' : 'white' }}
+                      title={activeMemberId === user.uid ? '선택 시 이 방에 공유되는 내 플랜이 실시간 변경됩니다.' : ''}
                     >
-                      {memberScheduleData.plans
-                        .filter(p => p.id === activeRoom.memberDetails[activeMemberId]?.sharedPlanId || activeMemberId === user.uid)
-                        .map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
+                      {activeMemberId === user.uid ? (
+                        memberScheduleData.plans.map(p => (
+                          <option key={p.id} value={p.id}>[내 공유] {p.name}</option>
+                        ))
+                      ) : (
+                        memberScheduleData.plans
+                          .filter(p => p.id === (activeRoom.memberDetails[activeMemberId]?.sharedPlanId || memberScheduleData.plans[0].id))
+                          .map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))
+                      )}
                     </select>
                   )}
                 </div>

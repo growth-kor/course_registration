@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteDoc, deleteField } from 'firebase/firestore';
 
 const LOCAL_STORAGE_KEY_FIREBASE_CFG = 'brutalist_planner_firebase_config';
 
@@ -214,6 +214,53 @@ export async function joinRoomByCode(inviteCode, userId, userName, sharedPlanId)
   } catch (e) {
     console.error("Error joining room:", e);
     return { success: false, message: '방 참여 중 오류가 발생했습니다.' };
+  }
+}
+
+export async function removeMember(roomId, userId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !userId) return false;
+
+  try {
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, {
+      memberIds: arrayRemove(userId),
+      [`memberDetails.${userId}`]: deleteField()
+    });
+    return true;
+  } catch (e) {
+    console.error("Error removing member:", e);
+    return false;
+  }
+}
+
+export async function deleteRoom(roomId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId) return false;
+
+  try {
+    const roomRef = doc(db, 'rooms', roomId);
+    await deleteDoc(roomRef);
+    return true;
+  } catch (e) {
+    console.error("Error deleting room:", e);
+    return false;
+  }
+}
+
+export async function transferOwnership(roomId, newOwnerId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !newOwnerId) return false;
+
+  try {
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, {
+      ownerId: newOwnerId
+    });
+    return true;
+  } catch (e) {
+    console.error("Error transferring ownership:", e);
+    return false;
   }
 }
 
