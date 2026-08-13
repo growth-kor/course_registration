@@ -75,11 +75,12 @@ export function Header({
                 backgroundColor: activeTab === 'personal' ? 'var(--color-primary)' : 'white',
                 color: 'var(--text-main)',
                 border: '2px solid var(--border-main)',
-                boxShadow: activeTab === 'personal' ? 'var(--shadow-hard-sm)' : 'none',
-                transform: activeTab === 'personal' ? 'translate(-2px, -2px)' : 'none',
+                boxShadow: activeTab === 'personal' ? 'none' : 'var(--shadow-hard-sm)',
+                transform: activeTab === 'personal' ? 'none' : 'translate(-2px, -2px)',
                 fontWeight: '900',
                 padding: '0.5rem 1rem',
-                fontSize: '1rem'
+                fontSize: '1rem',
+                cursor: 'pointer'
               }}
             >
               🗓️ 내 시간표
@@ -91,11 +92,12 @@ export function Header({
                 backgroundColor: activeTab === 'shared' ? 'var(--color-primary)' : 'white',
                 color: 'var(--text-main)',
                 border: '2px solid var(--border-main)',
-                boxShadow: activeTab === 'shared' ? 'var(--shadow-hard-sm)' : 'none',
-                transform: activeTab === 'shared' ? 'translate(-2px, -2px)' : 'none',
+                boxShadow: activeTab === 'shared' ? 'none' : 'var(--shadow-hard-sm)',
+                transform: activeTab === 'shared' ? 'none' : 'translate(-2px, -2px)',
                 fontWeight: '900',
                 padding: '0.5rem 1rem',
-                fontSize: '1rem'
+                fontSize: '1rem',
+                cursor: 'pointer'
               }}
             >
               👥 공유 시간표

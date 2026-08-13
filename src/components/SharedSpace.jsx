@@ -75,12 +75,14 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
-    const room = await createRoom(user.uid, user.displayName || '이름 없음', newRoomName, isPublic);
+    const room = await createRoom(newRoomName, isPublic, user.uid, user.displayName || '이름 없음');
     if (room) {
       alert(`방이 생성되었습니다! 초대 코드: ${room.inviteCode}`);
       setShowCreateModal(false);
       setNewRoomName('');
       loadRooms();
+    } else {
+      alert('방 생성에 실패했습니다. 다시 시도해 주세요.');
     }
   };
 
