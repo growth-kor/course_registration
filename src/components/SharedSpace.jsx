@@ -144,25 +144,27 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
   }
 
   return (
-    <div className="shared-space-container" style={{ display: 'flex', height: '100%', backgroundColor: '#f8fafc' }}>
+    <div className="shared-space-container" style={{ display: 'flex', height: '100%', backgroundColor: 'transparent' }}>
       {/* Sidebar for Room List */}
-      <div className="rooms-sidebar" style={{ width: '300px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'white' }}>
-        <div style={{ display: 'flex', borderBottom: '2px solid var(--border-main)' }}>
+      <div className="rooms-sidebar" style={{ width: '300px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
+        <div style={{ display: 'flex' }}>
           <button 
             onClick={() => setSidebarTab('my_rooms')}
             style={{ 
               flex: 1, 
-              padding: '1rem', 
+              padding: '1rem 0.5rem', 
               border: 'none',
               borderRight: '2px solid var(--border-main)',
-              background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : 'white',
-              color: sidebarTab === 'my_rooms' ? 'white' : 'black',
-              fontWeight: 'bold',
+              borderBottom: sidebarTab === 'my_rooms' ? '4px solid var(--border-main)' : '2px solid var(--border-main)',
+              background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : '#f8fafc',
+              color: 'var(--text-main)',
+              fontWeight: '900',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              transition: 'all 0.1s ease'
             }}
           >
             <Users size={16} /> 소속된 방
@@ -171,43 +173,49 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
             onClick={() => setSidebarTab('explore')}
             style={{ 
               flex: 1, 
-              padding: '1rem', 
+              padding: '1rem 0.5rem', 
               border: 'none',
-              background: sidebarTab === 'explore' ? 'var(--color-primary)' : 'white',
-              color: sidebarTab === 'explore' ? 'white' : 'black',
-              fontWeight: 'bold',
+              borderBottom: sidebarTab === 'explore' ? '4px solid var(--border-main)' : '2px solid var(--border-main)',
+              background: sidebarTab === 'explore' ? 'var(--color-primary)' : '#f8fafc',
+              color: 'var(--text-main)',
+              fontWeight: '900',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              transition: 'all 0.1s ease'
             }}
           >
             <Search size={16} /> 공유방 탐색
           </button>
         </div>
         
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {sidebarTab === 'my_rooms' ? (
             loading ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>불러오는 중...</div>
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-main)', fontWeight: 'bold' }}>불러오는 중...</div>
             ) : rooms.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1rem', color: '#94a3b8', fontSize: '0.9rem' }}>참여 중인 방이 없습니다.</div>
+              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>참여 중인 방이 없습니다.</div>
             ) : (
               rooms.map(room => (
                 <button 
                   key={room.id}
+                  className="btn"
                   onClick={() => setActiveRoom(room)}
                   style={{
-                    padding: '0.75rem',
+                    padding: '1rem',
                     textAlign: 'left',
-                    backgroundColor: activeRoom?.id === room.id ? '#e2e8f0' : 'white',
+                    backgroundColor: activeRoom?.id === room.id ? 'var(--color-primary)' : 'white',
                     border: '2px solid var(--border-main)',
+                    boxShadow: activeRoom?.id === room.id ? 'var(--shadow-hard-sm)' : 'none',
+                    transform: activeRoom?.id === room.id ? 'translate(-2px, -2px)' : 'none',
                     cursor: 'pointer',
-                    fontWeight: activeRoom?.id === room.id ? 'bold' : 'normal',
+                    fontWeight: '900',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem'
+                    gap: '0.75rem',
+                    width: '100%'
                   }}
                 >
                   <span>{room.isPublic ? <Globe size={14} color="#166534" /> : <Lock size={14} color="#64748b" />}</span>
@@ -217,9 +225,9 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
             )
           ) : (
             loadingExplore ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>탐색 중...</div>
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-main)', fontWeight: 'bold' }}>탐색 중...</div>
             ) : publicRooms.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '1rem', color: '#94a3b8', fontSize: '0.9rem' }}>공개된 방이 없습니다.</div>
+              <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>공개된 방이 없습니다.</div>
             ) : (
               publicRooms.map(room => {
                 const isMember = rooms.some(r => r.id === room.id);
@@ -227,23 +235,24 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
                   <div 
                     key={room.id}
                     style={{
-                      padding: '0.75rem',
+                      padding: '1rem',
                       backgroundColor: 'white',
                       border: '2px solid var(--border-main)',
+                      boxShadow: 'var(--shadow-hard-sm)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '0.5rem'
+                      gap: '0.75rem'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                      <Globe size={14} color="#166534" /> {room.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900', fontSize: '1.1rem' }}>
+                      <Globe size={18} color="var(--border-main)" /> {room.name}
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>멤버: {room.memberIds?.length || 1}명</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>멤버: {room.memberIds?.length || 1}명</div>
                     {isMember ? (
-                      <button className="btn btn-sm" disabled style={{ width: '100%', background: '#e2e8f0', color: '#64748b' }}>이미 참여 중</button>
+                      <button className="btn" disabled style={{ width: '100%', background: '#e2e8f0', color: '#64748b' }}>이미 참여 중</button>
                     ) : (
                       <button 
-                        className="btn btn-sm btn-primary" 
+                        className="btn btn-primary" 
                         style={{ width: '100%', justifyContent: 'center' }}
                         onClick={async () => {
                           const result = await joinRoomByCode(room.inviteCode, user.uid, user.displayName || '이름 없음');
@@ -266,46 +275,50 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
           )}
         </div>
 
-        <div style={{ padding: '1rem', borderTop: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowCreateModal(true)}>
+        <div style={{ padding: '1rem', borderTop: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', gap: '0.75rem', backgroundColor: 'white' }}>
+          <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ width: '100%', justifyContent: 'center' }}>
             <Plus size={16} /> 새 방 만들기
           </button>
-          <button className="btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowJoinModal(true)}>
+          <button className="btn" onClick={() => setShowJoinModal(true)} style={{ width: '100%', justifyContent: 'center' }}>
             <Key size={16} /> 코드로 입장
           </button>
         </div>
       </div>
 
-      {/* Main Area for Active Room Schedule Viewer */}
-      <div className="room-viewer-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {activeRoom ? (
+      {/* Main Content Area */}
+      <div className="shared-main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
+        {!activeRoom ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900', fontSize: '1.2rem', backgroundColor: 'var(--bg-main)' }}>
+            방을 선택해 주세요
+          </div>
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            {/* Room Header */}
-            <div style={{ padding: '1.5rem', borderBottom: '2px solid var(--border-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white' }}>
+            <div className="room-header" style={{ padding: '1.5rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {activeRoom.isPublic ? <Globe size={24} color="#166534" /> : <Lock size={24} color="#64748b" />}
+                <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
+                  {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
                   {activeRoom.name}
                 </h2>
-                <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
-                  초대 코드: <span style={{ fontWeight: 'bold', userSelect: 'all', background: '#f1f5f9', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>{activeRoom.inviteCode}</span>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
                 </div>
               </div>
               
-              {/* Member Selector */}
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '50%' }}>
+              <div className="member-selector" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '50%' }}>
+                <span style={{ fontWeight: '900', marginRight: '0.5rem' }}>멤버 일정:</span>
                 {activeRoom.memberIds.map(mId => (
                   <button 
                     key={mId}
+                    className="btn"
                     onClick={() => setActiveMemberId(mId)}
                     style={{
                       padding: '0.5rem 1rem',
                       border: '2px solid var(--border-main)',
                       backgroundColor: activeMemberId === mId ? 'var(--color-primary)' : 'white',
-                      color: activeMemberId === mId ? 'white' : 'black',
-                      fontWeight: 'bold',
+                      fontWeight: '900',
+                      boxShadow: activeMemberId === mId ? 'var(--shadow-hard-sm)' : 'none',
+                      transform: activeMemberId === mId ? 'translate(-2px, -2px)' : 'none',
                       cursor: 'pointer',
-                      borderRadius: '20px'
                     }}
                   >
                     {activeRoom.memberDetails[mId]?.name || '알 수 없음'}
@@ -315,13 +328,9 @@ export function SharedSpace({ user, firebaseStatus, onRequireLogin }) {
             </div>
             
             {/* Schedule Viewer */}
-            <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'white' }}>
+            <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)' }}>
               {renderMemberSchedule()}
             </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
-            <p>방을 선택해 주세요</p>
           </div>
         )}
       </div>

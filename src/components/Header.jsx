@@ -67,18 +67,36 @@ export function Header({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#e2e8f0', padding: '0.25rem', borderRadius: '4px' }}>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button 
-              className={`btn btn-sm ${activeTab === 'personal' ? 'btn-primary' : ''}`}
+              className="btn"
               onClick={() => onTabChange('personal')}
-              style={{ border: 'none', boxShadow: activeTab === 'personal' ? 'var(--shadow-hard-sm)' : 'none' }}
+              style={{
+                backgroundColor: activeTab === 'personal' ? 'var(--color-primary)' : 'white',
+                color: 'var(--text-main)',
+                border: '2px solid var(--border-main)',
+                boxShadow: activeTab === 'personal' ? 'var(--shadow-hard-sm)' : 'none',
+                transform: activeTab === 'personal' ? 'translate(-2px, -2px)' : 'none',
+                fontWeight: '900',
+                padding: '0.5rem 1rem',
+                fontSize: '1rem'
+              }}
             >
               🗓️ 내 시간표
             </button>
             <button 
-              className={`btn btn-sm ${activeTab === 'shared' ? 'btn-primary' : ''}`}
+              className="btn"
               onClick={() => onTabChange('shared')}
-              style={{ border: 'none', boxShadow: activeTab === 'shared' ? 'var(--shadow-hard-sm)' : 'none' }}
+              style={{
+                backgroundColor: activeTab === 'shared' ? 'var(--color-primary)' : 'white',
+                color: 'var(--text-main)',
+                border: '2px solid var(--border-main)',
+                boxShadow: activeTab === 'shared' ? 'var(--shadow-hard-sm)' : 'none',
+                transform: activeTab === 'shared' ? 'translate(-2px, -2px)' : 'none',
+                fontWeight: '900',
+                padding: '0.5rem 1rem',
+                fontSize: '1rem'
+              }}
             >
               👥 공유 시간표
             </button>

@@ -60,7 +60,7 @@ export default function App() {
     
     const handleKeyDown = (e) => {
       // Allow 'f' key to toggle fullscreen, but only if not typing in an input
-      if (e.key === 'f' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+      if (e.code === 'KeyF' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
         e.preventDefault();
         toggleFullscreen();
       }
