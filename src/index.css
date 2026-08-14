@@ -171,46 +171,48 @@ body {
   align-items: center;
   gap: 0.4rem;
   flex-wrap: nowrap;
-  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  max-width: 55%;
+  flex-shrink: 1;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.quick-stats-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .stat-pill {
   font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 800;
-  padding: 0.35rem 0.6rem;
+  font-size: 0.825rem;
+  font-weight: 700;
+  padding: 0.42rem 0.7rem;
   border: 2px solid var(--border-main);
   background-color: #ffffff;
   color: var(--text-main);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  box-shadow: 2px 2px 0px var(--border-main);
+  box-shadow: var(--shadow-hard-sm, 2px 2px 0px var(--border-main));
   line-height: 1.2;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.stat-pill-icon {
-  font-size: 0.95rem;
-  line-height: 1;
-}
-
 .stat-pill-label {
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-main);
-  font-size: 0.82rem;
+  font-size: 0.825rem;
   white-space: nowrap;
 }
 
-.stat-pill-badge {
-  background-color: var(--text-main);
-  color: #ffffff;
-  padding: 0.1rem 0.35rem;
-  font-size: 0.8rem;
+.stat-pill-value {
   font-weight: 900;
-  letter-spacing: -0.01em;
-  border-radius: 0px;
+  color: var(--text-main);
+  font-size: 0.825rem;
+  white-space: nowrap;
 }
 
 .dot {

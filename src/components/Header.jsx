@@ -177,14 +177,13 @@ export function Header({
         </div>
 
         {/* Quick Stats Bar */}
-        <div className="quick-stats-bar">
+        <div className="quick-stats-bar" title="카테고리별 주간 총 시간">
           {Object.values(safeCategories).filter(Boolean).map(cat => {
             const label = (lang === 'en' && t(`cat_${cat.id}`)) ? t(`cat_${cat.id}`) : cat.label;
             return (
-              <span key={cat.id} className="stat-pill" title={`${label}: ${stats[cat.id]}h`}>
-                {cat.icon && <span className="stat-pill-icon">{cat.icon}</span>}
+              <span key={cat.id} className="stat-pill">
                 <span className="stat-pill-label">{label}</span>
-                <span className="stat-pill-badge">{stats[cat.id]}h</span>
+                <strong className="stat-pill-value">{stats[cat.id]}h</strong>
               </span>
             );
           })}
