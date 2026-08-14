@@ -228,25 +228,28 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--hl-yellow);
+  background-color: var(--text-main);
+  color: #ffffff;
 }
 .btn-primary:hover {
-  background-color: #facc15;
+  background-color: #333333;
+  color: #ffffff;
 }
 
 .btn-accent {
-  background-color: var(--hl-mint);
+  background-color: #e2e8f0;
+  color: var(--text-main);
 }
 .btn-accent:hover {
-  background-color: #5eead4;
+  background-color: #cbd5e1;
 }
 
 .btn-danger {
-  background-color: #ef4444;
+  background-color: var(--text-main);
   color: #ffffff;
 }
 .btn-danger:hover {
-  background-color: #dc2626;
+  background-color: #333333;
   color: #ffffff;
 }
 
@@ -432,6 +435,12 @@ body {
   box-shadow: none;
 }
 
+.heatmap-block {
+  mix-blend-mode: multiply;
+  color: #000;
+  box-shadow: none !important;
+}
+
 .block-header {
   display: flex;
   align-items: center;
@@ -549,21 +558,31 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background-color: #ef4444;
   z-index: 15;
   pointer-events: none;
+  animation: pulseBlink 2s infinite;
+  display: flex;
+  align-items: center;
+}
+
+@keyframes pulseBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .time-indicator-dot {
   position: absolute;
-  left: -5px;
-  top: -4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  left: -42px;
   background-color: #ef4444;
-  border: 1px solid #ffffff;
+  color: white;
+  font-weight: 900;
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  border-radius: 0;
+  border: 2px solid var(--border-main);
+  box-shadow: 2px 2px 0px var(--border-main);
 }
 
 /* Modal System */

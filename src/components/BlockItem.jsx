@@ -11,10 +11,11 @@ export function BlockItem({ block, slot, style, categories, onClick, isPendingDe
 
   return (
     <div
-      className={`block-item ${isPendingDelete ? 'pending-delete' : ''}`}
+      className={`block-item ${isPendingDelete ? 'pending-delete' : ''} ${block.isHeatmap ? 'heatmap-block' : ''}`}
       style={{
         ...style,
-        backgroundColor: block.color || categoryInfo.defaultColor
+        backgroundColor: block.isHeatmap ? 'rgba(0, 0, 0, 0.15)' : (block.color || categoryInfo.defaultColor),
+        border: block.isHeatmap ? '1px solid rgba(0, 0, 0, 0.3)' : undefined
       }}
       onClick={() => onClick(block)}
       title={`${block.title} (${slot.startTime} ~ ${slot.endTime})`}

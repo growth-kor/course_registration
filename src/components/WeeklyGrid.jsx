@@ -134,7 +134,6 @@ export function WeeklyGrid({
                   className="current-time-line"
                   style={{ top: `${currentTimeTopPercent}%` }}
                 >
-                  <div className="time-indicator-dot" />
                 </div>
               )}
             </div>

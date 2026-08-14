@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteDoc, deleteField, increment } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const LOCAL_STORAGE_KEY_FIREBASE_CFG = 'brutalist_planner_firebase_config';
 
@@ -32,21 +33,23 @@ export function saveFirebaseConfig(config) {
 let app = null;
 let auth = null;
 let db = null;
+let storage = null;
 
 export function initFirebase(customConfig = null) {
   const config = customConfig || getStoredFirebaseConfig();
   if (!config || !config.apiKey) {
-    return { isConfigured: false, auth: null, db: null };
+    return { isConfigured: false, auth: null, db: null, storage: null };
   }
 
   try {
     app = getApps().length === 0 ? initializeApp(config) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
-    return { isConfigured: true, auth, db };
+    storage = getStorage(app);
+    return { isConfigured: true, auth, db, storage };
   } catch (err) {
     console.error("Firebase init error:", err);
-    return { isConfigured: false, error: err.message, auth: null, db: null };
+    return { isConfigured: false, error: err.message, auth: null, db: null, storage: null };
   }
 }
 
@@ -356,7 +359,7 @@ export async function fetchPosts(roomId) {
   }
 }
 
-export async function addPost(roomId, userId, userName, category, title, content) {
+export async function addPost(roomId, userId, userName, category, title, content, poll = null) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !roomId || !userId || !content) return null;
 
@@ -368,8 +371,18 @@ export async function addPost(roomId, userId, userName, category, title, content
       category: category || '일반',
       title: title || '(제목 없음)',
       content,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      likes: [],
+      views: 0
     };
+    
+    if (poll && poll.options && poll.options.length > 0) {
+      postData.poll = {
+        multipleChoice: poll.multipleChoice || false,
+        options: poll.options.map((opt, idx) => ({ id: idx, text: opt, votes: [] }))
+      };
+    }
+
     const newDoc = await addDoc(postsRef, postData);
     
     // Update room lastActivityAt
@@ -438,22 +451,61 @@ export async function togglePostLike(roomId, postId, userId) {
 
   try {
     const postRef = doc(db, 'rooms', roomId, 'posts', postId);
-    const postDoc = await getDoc(postRef);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return false;
+
+    const data = postSnap.data();
+    const currentLikes = data.likes || [];
+    const isLiked = currentLikes.includes(userId);
     
-    if (postDoc.exists()) {
-      const data = postDoc.data();
-      const likes = data.likes || [];
-      if (likes.includes(userId)) {
-        await updateDoc(postRef, { likes: arrayRemove(userId) });
-        return { liked: false, likeCount: likes.length - 1 };
-      } else {
-        await updateDoc(postRef, { likes: arrayUnion(userId) });
-        return { liked: true, likeCount: likes.length + 1 };
-      }
-    }
-    return false;
+    const newLikes = isLiked 
+      ? currentLikes.filter(id => id !== userId)
+      : [...currentLikes, userId];
+      
+    await updateDoc(postRef, { likes: newLikes });
+    return { isLiked: !isLiked, likesCount: newLikes.length };
   } catch (e) {
     console.error("Error toggling like:", e);
+    return false;
+  }
+}
+
+export async function votePoll(roomId, postId, userId, optionId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId || !userId) return false;
+
+  try {
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    const postSnap = await getDoc(postRef);
+    if (!postSnap.exists()) return false;
+
+    const data = postSnap.data();
+    if (!data.poll || !data.poll.options) return false;
+
+    let newOptions = [...data.poll.options];
+    
+    if (!data.poll.multipleChoice) {
+      // Remove user from all other options first
+      newOptions = newOptions.map(opt => ({
+        ...opt,
+        votes: opt.votes.filter(id => id !== userId)
+      }));
+    }
+
+    // Toggle vote on selected option
+    const targetOption = newOptions.find(o => o.id === optionId);
+    if (targetOption) {
+      if (targetOption.votes.includes(userId)) {
+        targetOption.votes = targetOption.votes.filter(id => id !== userId);
+      } else {
+        targetOption.votes.push(userId);
+      }
+    }
+
+    await updateDoc(postRef, { 'poll.options': newOptions });
+    return newOptions;
+  } catch (e) {
+    console.error("Error voting on poll:", e);
     return false;
   }
 }
@@ -474,7 +526,7 @@ export async function fetchComments(roomId, postId) {
   }
 }
 
-export async function addComment(roomId, postId, userId, userName, content) {
+export async function addComment(roomId, postId, userId, userName, content, parentId = null) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !roomId || !postId || !userId || !content) return null;
 
@@ -484,6 +536,7 @@ export async function addComment(roomId, postId, userId, userName, content) {
       authorId: userId,
       authorName: userName,
       content,
+      parentId,
       createdAt: new Date().toISOString()
     };
     const newDoc = await addDoc(commentsRef, commentData);
@@ -519,5 +572,22 @@ export async function deleteComment(roomId, postId, commentId) {
   } catch (e) {
     console.error("Error deleting comment:", e);
     return false;
+  }
+}
+
+export async function uploadImage(file, path = 'images') {
+  const { isConfigured, storage } = initFirebase();
+  if (!isConfigured || !storage || !file) return null;
+
+  try {
+    const ext = file.name.split('.').pop();
+    const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+    const storageRef = ref(storage, `${path}/${filename}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return url;
+  } catch (e) {
+    console.error("Error uploading image:", e);
+    return null;
   }
 }

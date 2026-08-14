@@ -85,7 +85,7 @@ export function Header({
                 cursor: 'pointer'
               }}
             >
-              🗓️ 내 시간표
+              내 시간표
             </button>
             <button 
               className="btn"
@@ -102,16 +102,19 @@ export function Header({
                 cursor: 'pointer'
               }}
             >
-              👥 공유 시간표
+              공유 시간표
             </button>
           </div>
           
-          <div className="auth-status-badge" onClick={onOpenAuthModal} title="로그인 설정">
+          <div className="auth-status-badge" onClick={onOpenAuthModal} title="로그인 및 프로필 설정">
           {user ? (
-            <span className="user-logged-in">
-              <Cloud size={16} className="cloud-icon active" />
-              <span className="user-email">{user.email || user.displayName}</span>
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span className="user-logged-in">
+                <Cloud size={16} className="cloud-icon active" />
+                <span className="user-email">{user.email || user.displayName}</span>
+              </span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 'bold' }}>프로필 설정</span>
+            </div>
           ) : (
             <span className="user-logged-out">
               <Cloud size={16} className="cloud-icon" />
