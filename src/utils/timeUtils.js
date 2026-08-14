@@ -13,8 +13,13 @@ export function minutesToTimeStr(totalMinutes) {
   return `${pad(h)}:${pad(m)}`;
 }
 
-// Generate dropdown options in 10-minute steps (e.g., 06:00, 06:10, 06:20 ... 23:50)
-export function generate10MinStepOptions(startHour = 6, endHour = 24) {
+export function formatTimeLabel(hour, minute = 0) {
+  const displayHour = hour >= 24 ? hour - 24 : hour;
+  return `${String(displayHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+}
+
+// Generate dropdown options in 10-minute steps (e.g., 06:00, 06:10, 06:20 ... 29:50)
+export function generate10MinStepOptions(startHour = 6, endHour = 30) {
   const options = [];
   for (let h = startHour; h <= endHour; h++) {
     for (let m = 0; m < 60; m += 10) {

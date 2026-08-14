@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { DAYS_OF_WEEK } from '../constants/presets';
 import { BlockItem } from './BlockItem';
-import { getBlockGridStyle } from '../utils/timeUtils';
+import { getBlockGridStyle, formatTimeLabel } from '../utils/timeUtils';
 
 export function WeeklyGrid({
   blocks,
   showWeekend,
   gridStartHour = 6,
-  gridEndHour = 24,
+  gridEndHour = 30, // Changed from 24 to 30
   hourRowHeight = 60,
   onBlockClick,
   onEmptySlotClick,
@@ -18,7 +18,7 @@ export function WeeklyGrid({
 }) {
   const activeDays = showWeekend ? DAYS_OF_WEEK : DAYS_OF_WEEK.slice(0, 5);
 
-  // Generate 1-hour row markers (e.g. 06:00, 07:00 ... 23:00)
+  // Generate 1-hour row markers
   const hourTicks = [];
   for (let h = gridStartHour; h < gridEndHour; h++) {
     hourTicks.push(h);
@@ -80,7 +80,7 @@ export function WeeklyGrid({
               className="time-tick-cell"
               style={{ height: `${hourRowHeight}px` }}
             >
-              <span className="time-tick-text">{String(hour).padStart(2, '0')}:00</span>
+              <span className="time-tick-text">{formatTimeLabel(hour)}</span>
             </div>
           ))}
         </div>
@@ -97,7 +97,7 @@ export function WeeklyGrid({
             >
               {/* 1-Hour Grid Lines */}
               {hourTicks.map(hour => {
-                const timeStr = `${String(hour).padStart(2, '0')}:00`;
+                const timeStr = formatTimeLabel(hour);
                 const isSelected = selectedEmptySlots.some(s => s.day === day.id && s.time === timeStr);
                 return (
                   <div

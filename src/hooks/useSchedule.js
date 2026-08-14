@@ -53,7 +53,7 @@ export function useSchedule() {
     } catch (e) {
       console.error("Failed to load settings", e);
     }
-    return { showWeekend: true, gridStartHour: 6, gridEndHour: 24, hourRowHeight: 60 };
+    return { showWeekend: true, gridStartHour: 6, gridEndHour: 30, hourRowHeight: 60 };
   });
 
   const [categories, setCategories] = useState(() => {

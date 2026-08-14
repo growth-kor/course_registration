@@ -82,7 +82,7 @@ export function ScheduleView() {
           blocks={blocksToRender}
           showWeekend={true}
           gridStartHour={6}
-          gridEndHour={24}
+          gridEndHour={30}
           hourRowHeight={60}
           categories={activeMemberId === '__all__' ? {} : (memberScheduleData?.categories || {})}
           onBlockClick={() => {}}
@@ -97,6 +97,23 @@ export function ScheduleView() {
   };
 
   if (!activeRoom) return null;
+
+  // Preview mode: non-member browsing a public room
+  if (activeRoom.isPreview) {
+    return (
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem', textAlign: 'center' }}>
+        <Users size={56} style={{ opacity: 0.25 }} />
+        <h2 style={{ fontWeight: '900', fontSize: '1.5rem' }}>미리보기 모드</h2>
+        <p style={{ color: 'var(--text-muted)', fontWeight: 'bold', maxWidth: '400px', lineHeight: 1.6 }}>
+          시간표 및 게시판은 방에 참여한 멤버에게만 공개됩니다.<br/>
+          방에 참여하면 모든 멤버의 공유 일정을 볼 수 있습니다.
+        </p>
+        <p style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-muted)' }}>
+          {activeRoom.memberIds?.length || 0}명 참여 중 · 초대 코드: <strong>{activeRoom.inviteCode}</strong>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>

@@ -111,7 +111,8 @@ export function SharedSpaceProvider({
     if (activeRoom) {
       sessionStorage.setItem('activeRoomId', activeRoom.id);
       localStorage.setItem(`last_visited_${activeRoom.id}`, new Date().toISOString());
-      setActiveMemberId(activeRoom.ownerId);
+      // Default to current user's own schedule; fallback to owner if user is not a member
+      setActiveMemberId(user?.uid || activeRoom.ownerId);
     }
   }, [activeRoom]);
 

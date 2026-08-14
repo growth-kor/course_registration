@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Calendar } from 'lucide-react';
+import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Calendar, Settings } from 'lucide-react';
 import { useSharedSpace, SharedSpaceProvider } from '../context/SharedSpaceContext';
 import { ScheduleView } from './ScheduleView';
 import { BoardList } from './BoardList';
@@ -22,7 +22,8 @@ function SharedSpaceContent() {
     loading, loadingExplore, activeRoom, setActiveRoom,
     roomTab, setRoomTab, boardView, setBoardView, toastMessage,
     setShowCreateModal, setShowJoinModal,
-    setSharedPlanIdToJoin
+    setSharedPlanIdToJoin,
+    showRoomSettingsModal, setShowRoomSettingsModal
   } = useSharedSpace();
 
   // Local state for modals/forms
@@ -185,7 +186,7 @@ function SharedSpaceContent() {
                           )}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                              {!room.themeImageUrl && (room.name ? room.name.substring(0,2) : '방')}
+                              {!room.themeImageUrl && (room.isPublic ? <Globe size={24} /> : <Lock size={24} />)}
                             </div>
                             <div style={{ overflow: 'hidden' }}>
                               <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
@@ -251,7 +252,7 @@ function SharedSpaceContent() {
                         }}>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
                             <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.5rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                              {!room.themeImageUrl && (room.name ? room.name.substring(0,2) : '방')}
+                              {!room.themeImageUrl && <Globe size={28} />}
                             </div>
                             <div style={{ flex: 1 }}>
                               <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{room.name}</h3>
@@ -270,9 +271,7 @@ function SharedSpaceContent() {
                               if (rooms.find(r => r.id === room.id)) {
                                 setActiveRoom(rooms.find(r => r.id === room.id));
                               } else {
-                                setJoinCode(room.inviteCode);
-                                setSharedPlanIdToJoin(plans && plans.length > 0 ? plans[0].id : '');
-                                setShowJoinModal(true);
+                                setActiveRoom({ ...room, isPreview: true });
                               }
                             }}
                             style={{ width: '100%', fontWeight: 'bold' }}
@@ -322,7 +321,7 @@ function SharedSpaceContent() {
               </div>
             </div>
               
-            <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button 
                 className="btn"
                 onClick={() => setRoomTab('schedule')}
@@ -355,8 +354,43 @@ function SharedSpaceContent() {
               >
                 <MessageSquare size={18} /> 게시판
               </button>
+              
+              {!activeRoom.isPreview && activeRoom.ownerId === user.uid && (
+                <button 
+                  className="btn"
+                  onClick={() => setShowRoomSettingsModal(true)}
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    fontWeight: 'bold', 
+                    backgroundColor: 'white',
+                    boxShadow: 'var(--shadow-hard-sm)'
+                  }}
+                >
+                  <Settings size={18} /> 방 설정
+                </button>
+              )}
+
+              {activeRoom.isPreview && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setJoinCode(activeRoom.inviteCode);
+                    setSharedPlanIdToJoin(plans && plans.length > 0 ? plans[0].id : '');
+                    setShowJoinModal(true);
+                  }}
+                  style={{ 
+                    padding: '0.5rem 1.5rem', 
+                    fontWeight: '900',
+                    fontSize: '1.1rem'
+                  }}
+                >
+                  이 방에 참여하기
+                </button>
+              )}
             </div>
-            <div style={{ flex: 1 }}></div>
           </div>
           
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)', display: 'flex', flexDirection: 'column' }}>

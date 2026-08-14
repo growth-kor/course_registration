@@ -30,7 +30,6 @@ export function FooterCard() {
           </div>
           <div className="footer-bio-line">
             <span className="footer-author-name">sungjang (@growth-kor)</span>
-            <span className="footer-bio-quote">"give me a chance"</span>
           </div>
           <div className="footer-copyright">
             © 2026 growth-kor. All rights reserved.

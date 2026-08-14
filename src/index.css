@@ -1415,13 +1415,11 @@ body {
   border: 2px solid var(--border-main);
   display: block;
   object-fit: cover;
-  filter: grayscale(100%);
-  transition: filter 0.2s ease, transform 0.2s ease;
+  transition: transform 0.2s ease;
   background-color: #ffffff;
 }
 
 .footer-avatar-link:hover .footer-avatar-img {
-  filter: grayscale(0%);
   transform: scale(1.05);
 }
 

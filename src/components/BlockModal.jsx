@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CATEGORIES, HIGHLIGHT_COLORS, DAYS_OF_WEEK, PRESET_EMOJIS } from '../constants/presets';
-import { generate10MinStepOptions } from '../utils/timeUtils';
+import { generate10MinStepOptions, formatTimeLabel } from '../utils/timeUtils';
 import { X, Trash2, Plus, Check, MapPin, AlignLeft, Lock, Globe } from 'lucide-react';
 
 export function BlockModal({
@@ -303,16 +303,14 @@ export function BlockModal({
                     value={slot.dayOfWeek}
                     onChange={e => updateTimeSlot(slot.id, 'dayOfWeek', Number(e.target.value))}
                   >
-                    {DAYS_OF_WEEK.map(d => (
-                      <option key={d.id} value={d.id}>{d.short}</option>
-                    ))}
+                    {DAYS_OF_WEEK.map(d => <option key={d.id} value={d.id}>{d.short}</option>)}
                   </select>
                   <select
                     className="select-field sm"
                     value={slot.startTime}
                     onChange={e => updateTimeSlot(slot.id, 'startTime', e.target.value)}
                   >
-                    {timeOptions.map(t => <option key={`s_${t}`} value={t}>{t}</option>)}
+                    {timeOptions.map(t => <option key={`s_${t}`} value={t}>{formatTimeLabel(...t.split(':').map(Number))}</option>)}
                   </select>
                   <span className="time-separator">~</span>
                   <select
@@ -320,7 +318,7 @@ export function BlockModal({
                     value={slot.endTime}
                     onChange={e => updateTimeSlot(slot.id, 'endTime', e.target.value)}
                   >
-                    {timeOptions.map(t => <option key={`e_${t}`} value={t}>{t}</option>)}
+                    {timeOptions.map(t => <option key={`e_${t}`} value={t}>{formatTimeLabel(...t.split(':').map(Number))}</option>)}
                   </select>
                   <button type="button" className="btn-icon-danger" onClick={() => removeTimeSlot(slot.id)}>
                     <Trash2 size={14} />

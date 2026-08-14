@@ -73,39 +73,50 @@ export async function updateUserProfile(user, newName, statusMessage) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !user) return false;
 
+  let anySuccess = false;
+
+  // 1. Update Firebase Auth Profile if name changed
   try {
-    // 1. Update Firebase Auth Profile if name changed
-    if (newName && newName !== user.displayName) {
-      await updateProfile(user, { displayName: newName });
+    if (newName && newName.trim() && newName !== user.displayName) {
+      await updateProfile(user, { displayName: newName.trim() });
     }
+  } catch (err) {
+    console.warn("Warning: Could not update Auth displayName:", err.code, err.message);
+  }
 
-    // 2. Save to users collection
+  // 2. Save to users collection (may fail if rules block it)
+  try {
     const userRef = doc(db, 'users', user.uid);
-    const userUpdates = {};
-    if (newName) userUpdates.name = newName;
-    if (statusMessage !== undefined) userUpdates.statusMessage = statusMessage;
+    const userUpdates = { uid: user.uid };
+    if (newName && newName.trim()) userUpdates.name = newName.trim();
+    if (statusMessage !== undefined && statusMessage !== null) userUpdates.statusMessage = statusMessage;
     await setDoc(userRef, userUpdates, { merge: true });
+    anySuccess = true;
+  } catch (err) {
+    console.error("Error saving user profile to Firestore:", err.code, err.message);
+    // Try to continue anyway
+  }
 
-    // 3. Update user's name and status in all rooms they belong to
+  // 3. Update user's name and status in all rooms they belong to
+  try {
     const q = query(collection(db, 'rooms'), where('memberIds', 'array-contains', user.uid));
     const querySnapshot = await getDocs(q);
     
-    // Process each room individually
     const promises = querySnapshot.docs.map(roomDoc => {
       const roomRef = doc(db, 'rooms', roomDoc.id);
       const updates = {};
-      if (newName) updates[`memberDetails.${user.uid}.name`] = newName;
-      if (statusMessage !== undefined) updates[`memberDetails.${user.uid}.statusMessage`] = statusMessage;
-      
+      if (newName && newName.trim()) updates[`memberDetails.${user.uid}.name`] = newName.trim();
+      if (statusMessage !== undefined && statusMessage !== null) updates[`memberDetails.${user.uid}.statusMessage`] = statusMessage;
       return Object.keys(updates).length > 0 ? updateDoc(roomRef, updates) : Promise.resolve();
     });
     
     await Promise.all(promises);
-    return true;
+    anySuccess = true;
   } catch (err) {
-    console.error("Error updating user profile:", err);
-    return false;
+    console.error("Error updating room memberDetails:", err.code, err.message);
   }
+
+  return anySuccess;
 }
 
 export async function getUserProfile(userId) {

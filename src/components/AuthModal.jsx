@@ -88,9 +88,13 @@ export function AuthModal({
                     onClick={async () => {
                       const nameToUpdate = newName.trim();
                       const statusToUpdate = newStatus.trim();
-                      await onUpdateProfile(nameToUpdate, statusToUpdate);
-                      setCurrentStatus(statusToUpdate);
-                      alert("프로필이 성공적으로 저장되었습니다!");
+                      const success = await onUpdateProfile(nameToUpdate, statusToUpdate);
+                      if (success) {
+                        setCurrentStatus(statusToUpdate);
+                        alert("프로필이 성공적으로 저장되었습니다!");
+                      } else {
+                        alert("프로필 저장에 실패했습니다. 네트워크 또는 Firebase 권한을 확인해주세요.");
+                      }
                     }}
                     style={{ width: '100%', justifyContent: 'center', fontWeight: '900', marginTop: '0.25rem' }}
                   >
