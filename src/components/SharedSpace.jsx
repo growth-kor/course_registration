@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
 import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Calendar, Settings } from 'lucide-react';
 import { useSharedSpace, SharedSpaceProvider } from '../context/SharedSpaceContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ScheduleView } from './ScheduleView';
 import { BoardList } from './BoardList';
 import { PostWrite } from './PostWrite';
@@ -25,6 +25,7 @@ function SharedSpaceContent() {
     setSharedPlanIdToJoin,
     showRoomSettingsModal, setShowRoomSettingsModal
   } = useSharedSpace();
+  const { t } = useLanguage();
 
   // Local state for modals/forms
   const [newPostTitle, setNewPostTitle] = useState('');
@@ -305,7 +306,7 @@ function SharedSpaceContent() {
                 onClick={() => setActiveRoom(null)}
                 style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}
               >
-                ← 대시보드
+                ← {t('dashboard')}
               </button>
 
               <button 
@@ -319,7 +320,7 @@ function SharedSpaceContent() {
                   transform: roomTab === 'schedule' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <Calendar size={16} /> 시간표
+                <Calendar size={16} /> {t('tab_schedule')}
               </button>
               <button 
                 className="btn"
@@ -332,7 +333,7 @@ function SharedSpaceContent() {
                   transform: roomTab === 'board' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <MessageSquare size={16} /> 게시판
+                <MessageSquare size={16} /> {t('tab_board')}
               </button>
               
               {!activeRoom.isPreview && activeRoom.ownerId === user.uid && (
@@ -341,7 +342,7 @@ function SharedSpaceContent() {
                   onClick={() => setShowRoomSettingsModal(true)}
                   style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}
                 >
-                  <Settings size={16} /> 방 설정
+                  <Settings size={16} /> {t('room_settings')}
                 </button>
               )}
 
@@ -355,7 +356,7 @@ function SharedSpaceContent() {
                   }}
                   style={{ padding: '0.45rem 1.2rem', fontWeight: '900' }}
                 >
-                  이 방에 참여하기
+                  {t('join_this_room')}
                 </button>
               )}
             </div>

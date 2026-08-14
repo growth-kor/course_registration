@@ -417,8 +417,7 @@ body {
   padding: 0.35rem 0.5rem;
   border-radius: 0px;
   cursor: pointer;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   z-index: 5;
   transition: transform 0.05s ease, z-index 0.05s ease;
   display: flex;
@@ -485,21 +484,6 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Scrollbar for Block Item */
-.block-item::-webkit-scrollbar {
-  width: 4px;
-}
-.block-item::-webkit-scrollbar-track {
-  background: transparent;
-}
-.block-item::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.2);
-  border-radius: 4px;
-}
-.block-item:hover::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.4);
 }
 
 /* Subtasks in Block Item */

@@ -1,6 +1,6 @@
-import React from 'react';
 import { Plus, Calendar, BarChart2, Cloud, FileJson, Trash2, CheckSquare, Maximize, Moon, Sun } from 'lucide-react';
 import { calculateCategoryStats } from '../utils/timeUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 export function Header({
   plans,
@@ -28,6 +28,7 @@ export function Header({
   isDarkMode,
   onToggleDarkMode
 }) {
+  const { t } = useLanguage();
   const safeCategories = categories || {};
   const stats = calculateCategoryStats(blocks, safeCategories);
 
@@ -36,15 +37,15 @@ export function Header({
       <div className="header-top-row">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
           <div className="brand-section" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <h1 className="brand-title" style={{ margin: 0 }}>주간 일정 플래너</h1>
+            <h1 className="brand-title" style={{ margin: 0 }}>{t('brand_title')}</h1>
             <button 
               className="btn btn-sm" 
               onClick={onToggleDarkMode} 
-              title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
+              title={isDarkMode ? (t('light_mode') + " 모드로 전환") : (t('dark_mode') + " 모드로 전환")}
               style={{ padding: '0.35rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
             >
               {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
-              <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{isDarkMode ? '라이트' : '다크'}</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{isDarkMode ? t('light_mode') : t('dark_mode')}</span>
             </button>
           </div>
           
@@ -61,18 +62,18 @@ export function Header({
             </select>
             <button className="btn btn-sm" onClick={() => {
               const plan = plans.find(p => p.id === currentPlanId);
-              const name = prompt('플랜 이름 변경:', plan?.name);
+              const name = prompt(t('prompt_rename_plan'), plan?.name);
               if (name) onRenamePlan(currentPlanId, name);
-            }} title="이름 변경">이름변경</button>
+            }} title={t('plan_rename')}>{t('plan_rename')}</button>
             <button className="btn btn-sm" onClick={() => {
-              const name = prompt('새 플랜 이름을 입력하세요:');
+              const name = prompt(t('prompt_new_plan'));
               if (name) onCreatePlan(name);
-            }} title="새 플랜 추가">추가</button>
+            }} title={t('plan_add')}>{t('plan_add')}</button>
             <button className="btn btn-sm" style={{ color: 'var(--color-red)' }} onClick={() => {
-              if (confirm('현재 플랜을 삭제하시겠습니까? (삭제 후 복구 불가)')) {
+              if (confirm(t('confirm_delete_plan'))) {
                 onDeletePlan(currentPlanId);
               }
-            }} title="플랜 삭제">삭제</button>
+            }} title={t('plan_delete')}>{t('plan_delete')}</button>
           </div>
           )}
         </div>
@@ -94,7 +95,7 @@ export function Header({
                 cursor: 'pointer'
               }}
             >
-              내 시간표
+              {t('my_schedule')}
             </button>
             <button 
               className="btn"
@@ -111,23 +112,23 @@ export function Header({
                 cursor: 'pointer'
               }}
             >
-              공유 시간표
+              {t('shared_schedule')}
             </button>
           </div>
           
-          <div className="auth-status-badge" onClick={onOpenAuthModal} title="로그인 및 프로필 설정">
+          <div className="auth-status-badge" onClick={onOpenAuthModal} title={t('profile_settings')}>
           {user ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
               <span className="user-logged-in">
                 <Cloud size={16} className="cloud-icon active" />
                 <span className="user-email">{user.email || user.displayName}</span>
               </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-main)', marginTop: '2px', fontWeight: 'bold' }}>프로필 설정</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-main)', marginTop: '2px', fontWeight: 'bold' }}>{t('profile_settings')}</span>
             </div>
           ) : (
             <span className="user-logged-out">
               <Cloud size={16} className="cloud-icon" />
-              <span>로그인</span>
+              <span>{t('login')}</span>
             </span>
           )}
         </div>
@@ -139,39 +140,39 @@ export function Header({
         {/* Control Buttons */}
         <div className="control-buttons">
           <button className="btn btn-primary" onClick={onOpenAddModal} disabled={isDeleteMode}>
-            <Plus size={18} /> 새 블록 기입
+            <Plus size={18} /> {t('add_block')}
           </button>
 
           {isDeleteMode ? (
             <>
               <button className="btn" onClick={onToggleDeleteMode}>
-                취소
+                {t('cancel')}
               </button>
               <button className="btn btn-danger" onClick={onConfirmDelete}>
-                <CheckSquare size={16} /> 확인 (삭제)
+                <CheckSquare size={16} /> {t('confirm_delete')}
               </button>
             </>
           ) : (
             <button className="btn" onClick={onToggleDeleteMode}>
-              <Trash2 size={16} /> 빠른 삭제
+              <Trash2 size={16} /> {t('quick_delete')}
             </button>
           )}
 
           <button className="btn" onClick={onToggleWeekend}>
             <Calendar size={16} />
-            {showWeekend ? '월~금 5일만 보기' : '월~일 전체 보기'}
+            {showWeekend ? t('weekday_5days') : t('weekday_7days')}
           </button>
 
           <button className="btn" onClick={onOpenAnalyticsModal}>
-            <BarChart2 size={16} /> 시간 분석
+            <BarChart2 size={16} /> {t('time_analytics')}
           </button>
 
           <button className="btn" onClick={onOpenBackupModal}>
-            <FileJson size={16} /> 백업/복원
+            <FileJson size={16} /> {t('backup_restore')}
           </button>
 
-          <button className="btn" onClick={onToggleFullscreen} title="전체화면 (f)">
-            <Maximize size={16} /> 전체화면
+          <button className="btn" onClick={onToggleFullscreen} title={`${t('fullscreen')} (f)`}>
+            <Maximize size={16} /> {t('fullscreen')}
           </button>
         </div>
 

@@ -11,6 +11,7 @@ import { FooterCard } from './components/FooterCard';
 import { UserGuideModal } from './components/UserGuideModal';
 import { Minimize } from 'lucide-react';
 import { updateUserProfile } from './firebase/config';
+import { useLanguage } from './context/LanguageContext';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -77,6 +78,8 @@ export default function App() {
   React.useEffect(() => {
     sessionStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
+
+  const { t } = useLanguage();
 
   // Dark Mode State
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -339,12 +342,12 @@ export default function App() {
       {/* Floating Action Bar for Multi-select */}
       {selectedEmptySlots.length > 0 && !isDeleteMode && (
         <div className="floating-action-bar">
-          <span className="selected-count">{selectedEmptySlots.length}칸 선택됨</span>
+          <span className="selected-count">{selectedEmptySlots.length} {t('selected_slots_count')}</span>
           <button className="btn btn-primary" onClick={handleOpenAddModalForSelection}>
-            선택한 시간에 추가
+            {t('add_to_selected')}
           </button>
           <button className="btn" onClick={() => setSelectedEmptySlots([])}>
-            취소
+            {t('cancel')}
           </button>
         </div>
       )}

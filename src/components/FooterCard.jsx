@@ -1,7 +1,10 @@
 import React from 'react';
-import { ExternalLink, BookOpen } from 'lucide-react';
+import { ExternalLink, BookOpen, Globe } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export function FooterCard({ onOpenGuide }) {
+  const { lang, toggleLanguage, t } = useLanguage();
+
   return (
     <footer className="footer-card-container">
       <div className="footer-card-left">
@@ -45,7 +48,18 @@ export function FooterCard({ onOpenGuide }) {
           style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
         >
           <BookOpen size={15} />
-          <span>플래너 사용 설명서</span>
+          <span>{t('footer_guide')}</span>
+        </button>
+
+        <button 
+          type="button"
+          onClick={toggleLanguage}
+          className="btn footer-action-btn"
+          title="언어 변경 (KO / EN) / Switch Language"
+          style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 'bold' }}
+        >
+          <Globe size={15} />
+          <span>{lang === 'ko' ? '🌐 한국어 (KO)' : '🌐 English (EN)'}</span>
         </button>
 
         <a 
@@ -55,7 +69,7 @@ export function FooterCard({ onOpenGuide }) {
           className="btn footer-action-btn"
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
         >
-          <span>공식 페이지 / GitHub</span>
+          <span>{t('footer_github')}</span>
           <ExternalLink size={15} />
         </a>
       </div>

@@ -3,6 +3,7 @@ import { Loader, Users } from 'lucide-react';
 import { useSharedSpace } from '../context/SharedSpaceContext';
 import { WeeklyGrid } from './WeeklyGrid';
 import { removeMember, transferOwnership } from '../firebase/config';
+import { useLanguage } from '../context/LanguageContext';
 
 export function ScheduleView() {
   const {
@@ -10,6 +11,7 @@ export function ScheduleView() {
     memberScheduleData, loadingSchedule, selectedPlanId,
     loadRooms, setActiveRoom
   } = useSharedSpace();
+  const { t } = useLanguage();
 
   const handleLeaveRoom = async () => {
     if (!activeRoom) return;
@@ -120,7 +122,7 @@ export function ScheduleView() {
       <div style={{ width: '270px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)', flexShrink: 0 }}>
         <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', color: 'var(--text-main)' }}>
           <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
-            <Users size={18} /> 참여 멤버 ({activeRoom.memberIds?.length || 0})
+            <Users size={18} /> {t('members_count')} ({activeRoom.memberIds?.length || 0})
           </h3>
         </div>
         <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -144,7 +146,7 @@ export function ScheduleView() {
               boxShadow: activeMemberId === '__all__' ? 'inset 4px 0 0 var(--text-main)' : 'none'
             }}
           >
-            전체 멤버 겹쳐보기
+            {t('all_members_heatmap')}
           </button>
           {activeRoom.memberIds?.map(mId => {
             const memberInfo = activeRoom.memberDetails?.[mId] || { name: '알 수 없음' };
@@ -189,12 +191,12 @@ export function ScheduleView() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
                       {isOwner && (
                         <span style={{ fontSize: '0.68rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.35rem', fontWeight: 'bold' }}>
-                          방장
+                          {t('room_owner')}
                         </span>
                       )}
                       {mId === user.uid && (
                         <span style={{ fontSize: '0.68rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.35rem', fontWeight: 'bold' }}>
-                          나
+                          {t('room_me')}
                         </span>
                       )}
                     </div>
@@ -218,7 +220,7 @@ export function ScheduleView() {
             style={{ width: '100%' }}
             onClick={handleLeaveRoom}
           >
-            방 나가기
+            {t('leave_room')}
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DAYS_OF_WEEK } from '../constants/presets';
 import { BlockItem } from './BlockItem';
 import { getBlockGridStyle, formatTimeLabel } from '../utils/timeUtils';
+import { useLanguage } from '../context/LanguageContext';
 
 export function WeeklyGrid({
   blocks,
@@ -16,6 +17,7 @@ export function WeeklyGrid({
   selectedEmptySlots = [],
   categories
 }) {
+  const { lang, t } = useLanguage();
   const activeDays = showWeekend ? DAYS_OF_WEEK : DAYS_OF_WEEK.slice(0, 5);
 
   // Generate 1-hour row markers
@@ -50,16 +52,17 @@ export function WeeklyGrid({
           gridTemplateColumns: `70px repeat(${activeDays.length}, 1fr)`
         }}
       >
-        <div className="grid-header-cell time-label-col">시간</div>
+        <div className="grid-header-cell time-label-col">{t('time_col')}</div>
         {activeDays.map(day => {
           const isToday = day.id === currentDayOfWeek;
+          const localizedDayName = t('days')?.[day.id]?.full || day.full;
           return (
             <div
               key={day.id}
               className={`grid-header-cell day-col ${isToday ? 'today-col' : ''}`}
             >
-              <span className="day-name">{day.full}</span>
-              {isToday && <span className="today-badge">TODAY</span>}
+              <span className="day-name">{localizedDayName}</span>
+              {isToday && <span className="today-badge">{t('today')}</span>}
             </div>
           );
         })}
