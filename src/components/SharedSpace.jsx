@@ -793,7 +793,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                                     <tr 
                                       key={post.id} 
                                       style={{ borderBottom: '1px solid var(--border-main)', cursor: 'pointer', transition: 'background-color 0.2s' }} 
-                                      onClick={() => { setSelectedPost(post); setBoardView('detail'); }}
+                                      onClick={() => handleSelectPost(post)}
                                       onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f8fafc'}
                                       onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
                                     >
