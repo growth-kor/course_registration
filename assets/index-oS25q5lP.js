@@ -202,6 +202,23 @@ self.addEventListener('message', async (e) => {
               min-height: 260px;
             }
 
+            .ql-picker.ql-font {
+              width: 140px !important;
+            }
+            .ql-picker.ql-size {
+              width: 90px !important;
+            }
+            .ql-picker-label {
+              display: flex !important;
+              align-items: center !important;
+              white-space: nowrap !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
+            }
+            .ql-picker-label::before {
+              white-space: nowrap !important;
+            }
+
             /* Custom Fonts */
             .ql-font-sans-serif, .ql-picker-item[data-value="sans-serif"]::before { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; }
             .ql-font-serif, .ql-picker-item[data-value="serif"]::before { font-family: Georgia, Cambria, "Times New Roman", Times, serif !important; }
@@ -211,12 +228,12 @@ self.addEventListener('message', async (e) => {
             .ql-font-noto-serif-kr, .ql-picker-item[data-value="noto-serif-kr"]::before { font-family: "Noto Serif KR", "Songti SC", "SimSun", serif !important; }
 
             /* Custom Font Labels */
-            .ql-picker.ql-font .ql-picker-label[data-value="sans-serif"]::before, .ql-picker.ql-font .ql-picker-item[data-value="sans-serif"]::before { content: '기본 고딕 (Sans)' !important; }
-            .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before, .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before { content: '기본 명조 (Serif)' !important; }
-            .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before, .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before { content: '코딩체 (Mono)' !important; }
-            .ql-picker.ql-font .ql-picker-label[data-value="pretendard"]::before, .ql-picker.ql-font .ql-picker-item[data-value="pretendard"]::before { content: '프리텐다드 (Pretendard)' !important; }
-            .ql-picker.ql-font .ql-picker-label[data-value="noto-sans-kr"]::before, .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-kr"]::before { content: '노토 산스 (한/중/영)' !important; }
-            .ql-picker.ql-font .ql-picker-label[data-value="noto-serif-kr"]::before, .ql-picker.ql-font .ql-picker-item[data-value="noto-serif-kr"]::before { content: '노토 세리프 (한/중/영)' !important; }
+            .ql-picker.ql-font .ql-picker-label[data-value="sans-serif"]::before, .ql-picker.ql-font .ql-picker-item[data-value="sans-serif"]::before { content: '기본 고딕' !important; }
+            .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before, .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before { content: '기본 명조' !important; }
+            .ql-picker.ql-font .ql-picker-label[data-value="monospace"]::before, .ql-picker.ql-font .ql-picker-item[data-value="monospace"]::before { content: '코딩체' !important; }
+            .ql-picker.ql-font .ql-picker-label[data-value="pretendard"]::before, .ql-picker.ql-font .ql-picker-item[data-value="pretendard"]::before { content: '프리텐다드' !important; }
+            .ql-picker.ql-font .ql-picker-label[data-value="noto-sans-kr"]::before, .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-kr"]::before { content: '노토 산스' !important; }
+            .ql-picker.ql-font .ql-picker-label[data-value="noto-serif-kr"]::before, .ql-picker.ql-font .ql-picker-item[data-value="noto-serif-kr"]::before { content: '노토 세리프' !important; }
             .ql-picker.ql-font .ql-picker-label:not([data-value])::before { content: '글꼴 선택' !important; }
 
             /* Custom Size Labels in pt */
@@ -229,7 +246,7 @@ self.addEventListener('message', async (e) => {
             .ql-picker.ql-size .ql-picker-label[data-value="18pt"]::before, .ql-picker.ql-size .ql-picker-item[data-value="18pt"]::before { content: '18pt' !important; }
             .ql-picker.ql-size .ql-picker-label[data-value="24pt"]::before, .ql-picker.ql-size .ql-picker-item[data-value="24pt"]::before { content: '24pt' !important; }
             .ql-picker.ql-size .ql-picker-label[data-value="32pt"]::before, .ql-picker.ql-size .ql-picker-item[data-value="32pt"]::before { content: '32pt' !important; }
-            .ql-picker.ql-size .ql-picker-label:not([data-value])::before { content: '크기 (pt)' !important; }
+            .ql-picker.ql-size .ql-picker-label:not([data-value])::before { content: '크기' !important; }
 
             /* Size styles in editor */
             .ql-editor .ql-size-9pt { font-size: 9pt; }
