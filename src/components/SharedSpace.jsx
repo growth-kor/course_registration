@@ -84,7 +84,7 @@ function SharedSpaceContent() {
                   transform: sidebarTab === 'my_rooms' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <Users size={16} /> 소속된 방
+                <Users size={16} /> {t('my_rooms')}
               </button>
               
               <button 
@@ -98,7 +98,7 @@ function SharedSpaceContent() {
                   transform: sidebarTab === 'explore' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <Globe size={16} /> 탐색
+                <Globe size={16} /> {t('explore')}
               </button>
 
               <button 
@@ -115,7 +115,7 @@ function SharedSpaceContent() {
                   gap: '0.4rem' 
                 }}
               >
-                <Plus size={16} /> 새 공유방 만들기
+                <Plus size={16} /> {t('create_room')}
               </button>
 
               <button 
@@ -132,7 +132,7 @@ function SharedSpaceContent() {
                   gap: '0.4rem' 
                 }}
               >
-                <Key size={16} /> 코드로 참여하기
+                <Key size={16} /> {t('join_with_code')}
               </button>
             </div>
           </div>
@@ -292,11 +292,11 @@ function SharedSpaceContent() {
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: '900', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {activeRoom.name}
-                  {activeRoom.isPublic && <span style={{ backgroundColor: 'white', color: 'var(--text-main)', fontSize: '0.65rem', padding: '0.1rem 0.35rem', border: '1.5px solid var(--border-main)', display: 'inline-flex', alignItems: 'center', gap: '0.15rem', fontWeight: 'bold', flexShrink: 0 }}><Globe size={11}/>공개</span>}
+                  {activeRoom.isPublic && <span style={{ backgroundColor: 'white', color: 'var(--text-main)', fontSize: '0.65rem', padding: '0.1rem 0.35rem', border: '1.5px solid var(--border-main)', display: 'inline-flex', alignItems: 'center', gap: '0.15rem', fontWeight: 'bold', flexShrink: 0 }}><Globe size={11}/>{t('public')}</span>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-main)', fontSize: '0.78rem', fontWeight: 'bold' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><Hash size={12} /> {activeRoom.inviteCode}</span>
-                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { navigator.clipboard.writeText(activeRoom.inviteCode); alert("복사 완료!"); }}>복사</span>
+                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { navigator.clipboard.writeText(activeRoom.inviteCode); alert(t('copied')); }}>{t('copy_code')}</span>
                 </div>
               </div>
             </div>
@@ -344,7 +344,7 @@ function SharedSpaceContent() {
                   onClick={() => setShowPlanChangeModal(true)}
                   style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}
                 >
-                  <Calendar size={16} /> 공개 시간표 설정
+                  <Calendar size={16} /> {t('set_public_schedule')}
                 </button>
               )}
               

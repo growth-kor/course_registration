@@ -280,9 +280,9 @@ export function RoomModals({
       {showPlanChangeModal && (
         <div className="modal-overlay" onClick={() => setShowPlanChangeModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem' }}>📅 공개 시간표 설정</h2>
+            <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem' }}>📅 {t('set_public_schedule')}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <label style={{ fontWeight: 'bold', display: 'block' }}>이 방에 공개할 시간표를 선택하세요</label>
+              <label style={{ fontWeight: 'bold', display: 'block' }}>{t('select_plan_to_share')}</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {plans.map(p => (
                   <div 
@@ -311,11 +311,11 @@ export function RoomModals({
                 ))}
               </div>
               <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                선택 시 즉시 저장되며, 다른 멤버들에게 이 시간표가 보여집니다.
+                {t('auto_save_share_desc')}
               </p>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
-              <button className="btn btn-primary" onClick={() => setShowPlanChangeModal(false)}>닫기</button>
+              <button className="btn btn-primary" onClick={() => setShowPlanChangeModal(false)}>{t('cancel') === 'Cancel' ? 'Close' : (t('cancel') === '取消' ? '关闭' : '닫기')}</button>
             </div>
           </div>
         </div>
@@ -349,7 +349,7 @@ export function RoomModals({
                   boxShadow: settingsTab === 'info' ? 'none' : 'var(--shadow-hard-sm)'
                 }}
               >
-                기본 정보
+                {t('general_info')}
               </button>
               <button
                 type="button"
@@ -366,7 +366,7 @@ export function RoomModals({
                   boxShadow: settingsTab === 'members' ? 'none' : 'var(--shadow-hard-sm)'
                 }}
               >
-                <Users size={15} /> 멤버 관리 ({activeRoom.memberIds?.length || 0})
+                <Users size={15} /> {t('member_manage')} ({activeRoom.memberIds?.length || 0})
               </button>
             </div>
 
@@ -499,8 +499,8 @@ export function RoomModals({
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontWeight: '800', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)' }}>
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mInfo.name}</span>
-                            {isOwner && <span style={{ fontSize: '0.65rem', backgroundColor: 'var(--text-main)', color: 'white', padding: '0.05rem 0.3rem', fontWeight: '900' }}>방장</span>}
-                            {isMe && <span style={{ fontSize: '0.65rem', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.3rem', fontWeight: 'bold' }}>나</span>}
+                            {isOwner && <span style={{ fontSize: '0.65rem', backgroundColor: 'var(--text-main)', color: 'white', padding: '0.05rem 0.3rem', fontWeight: '900' }}>{t('room_owner')}</span>}
+                            {isMe && <span style={{ fontSize: '0.65rem', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.3rem', fontWeight: 'bold' }}>{t('room_me')}</span>}
                           </div>
                           {mInfo.statusMessage && (
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -518,7 +518,7 @@ export function RoomModals({
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', fontWeight: 'bold' }}
                             onClick={() => handleTransferOwnership(mId, mInfo.name)}
                           >
-                            방장 위임
+                            {t('delegate_owner')}
                           </button>
                           <button 
                             type="button"
@@ -526,7 +526,7 @@ export function RoomModals({
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', fontWeight: 'bold' }}
                             onClick={() => handleKickMember(mId, mInfo.name)}
                           >
-                            강퇴
+                            {t('kick')}
                           </button>
                         </div>
                       )}
