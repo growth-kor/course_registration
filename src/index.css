@@ -28,16 +28,16 @@
 
 /* Dark Mode Variables */
 :root.dark-mode {
-  --bg-paper: #121212;
-  --bg-card: #1e1e1e;
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --border-main: #374151;
-  --border-grid: #374151;
-  --border-grid-dark: #4b5563;
+  --bg-paper: #09090b;
+  --bg-card: #18181b;
+  --text-main: #f4f4f5;
+  --text-muted: #f4f4f5;
+  --border-main: #e4e4e7;
+  --border-grid: #27272a;
+  --border-grid-dark: #3f3f46;
 
   /* Adjust Highlighter Colors for Dark Mode if needed */
-  --hl-yellow: #a16207;
+  --hl-yellow: #ca8a04;
   --hl-mint: #0f766e;
   --hl-orange: #c2410c;
   --hl-lavender: #6b21a8;
@@ -46,9 +46,9 @@
   --hl-pink: #be185d;
   --hl-sand: #854d0e;
   
-  --shadow-hard: 3px 3px 0px #000000;
-  --shadow-hard-lg: 5px 5px 0px #000000;
-  --shadow-hard-sm: 2px 2px 0px #000000;
+  --shadow-hard: 3px 3px 0px #e4e4e7;
+  --shadow-hard-lg: 5px 5px 0px #e4e4e7;
+  --shadow-hard-sm: 2px 2px 0px #e4e4e7;
 }
 
 * {
@@ -1224,3 +1224,136 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* ========================================================
+   COMPREHENSIVE DARK MODE OVERRIDES
+   ======================================================== */
+.dark-mode body {
+  background-color: #09090b;
+  color: #f4f4f5;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+.dark-mode .header-container,
+.dark-mode .main-content-area,
+.dark-mode .modal-content,
+.dark-mode .dashboard-view,
+.dark-mode .weekly-grid-wrapper,
+.dark-mode .day-column,
+.dark-mode .time-ticks-column,
+.dark-mode .grid-header-row {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+}
+
+.dark-mode .header-container {
+  box-shadow: 3px 3px 0px #e4e4e7;
+}
+
+.dark-mode .main-content-area {
+  box-shadow: 5px 5px 0px #e4e4e7;
+}
+
+.dark-mode .btn,
+.dark-mode .btn-primary,
+.dark-mode .btn-accent,
+.dark-mode .btn-danger,
+.dark-mode .plan-dropdown,
+.dark-mode .auth-status-badge,
+.dark-mode .stat-pill,
+.dark-mode .input-field,
+.dark-mode .select-field,
+.dark-mode .textarea-field {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+  box-shadow: 2px 2px 0px #e4e4e7 !important;
+}
+
+.dark-mode .btn:hover,
+.dark-mode .plan-dropdown:hover,
+.dark-mode .auth-status-badge:hover {
+  background-color: #27272a !important;
+}
+
+.dark-mode .btn:active {
+  box-shadow: 1px 1px 0px #e4e4e7 !important;
+}
+
+.dark-mode .grid-header-cell {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+}
+
+.dark-mode .grid-header-cell.today-col {
+  background-color: #713f12 !important;
+  color: #ffffff !important;
+}
+
+.dark-mode .today-column-bg {
+  background-color: rgba(113, 63, 18, 0.2) !important;
+}
+
+.dark-mode .grid-hour-cell {
+  border-bottom: 1px dashed #3f3f46 !important;
+}
+
+.dark-mode .grid-hour-cell:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark-mode .grid-hour-cell.selected {
+  background-color: #1e3a5f !important;
+  border: 2px solid #60a5fa !important;
+}
+
+.dark-mode .time-tick-cell {
+  border-bottom: 1px solid #3f3f46 !important;
+}
+
+.dark-mode .time-tick-text {
+  color: #f4f4f5 !important;
+}
+
+.dark-mode .block-item {
+  border-color: #e4e4e7 !important;
+  box-shadow: 2px 2px 0px #e4e4e7 !important;
+}
+
+.dark-mode table,
+.dark-mode th,
+.dark-mode td {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+}
+
+.dark-mode thead tr {
+  background-color: #27272a !important;
+}
+
+.dark-mode tbody tr:hover {
+  background-color: #222226 !important;
+}
+
+.dark-mode .category-btn {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+}
+
+.dark-mode div[style*="backgroundColor: 'white'"],
+.dark-mode div[style*="backgroundColor: '#ffffff'"],
+.dark-mode div[style*="backgroundColor: \"white\""],
+.dark-mode div[style*="backgroundColor: \"#ffffff\""],
+.dark-mode div[style*="background: white"],
+.dark-mode div[style*="background: #ffffff"] {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #e4e4e7 !important;
+}
+
