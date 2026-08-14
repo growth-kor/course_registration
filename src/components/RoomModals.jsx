@@ -396,7 +396,7 @@ export function RoomModals({
                 <div>
                   <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.4rem' }}>
                     방 대표 이미지
-                    <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>파일 업로드 시 자동 압축 (최대 150KB)</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>(최대 150KB)</span>
                   </label>
                   {/* Preview */}
                   {settingsImagePreview && (
