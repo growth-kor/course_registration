@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
-import { Loader, Users } from 'lucide-react';
+import React from 'react';
+import { Users } from 'lucide-react';
 import { useSharedSpace } from '../context/SharedSpaceContext';
 import { WeeklyGrid } from './WeeklyGrid';
-import { removeMember, transferOwnership } from '../firebase/config';
+import { removeMember } from '../firebase/config';
 import { useLanguage } from '../context/LanguageContext';
 
 export function ScheduleView() {
@@ -11,7 +11,7 @@ export function ScheduleView() {
     memberScheduleData, loadingSchedule, selectedPlanId,
     loadRooms, setActiveRoom
   } = useSharedSpace();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   const handleLeaveRoom = async () => {
     if (!activeRoom) return;
@@ -23,31 +23,6 @@ export function ScheduleView() {
       const success = await removeMember(activeRoom.id, user.uid);
       if (success) {
         setActiveRoom(null);
-        loadRooms();
-      } else {
-        alert("오류가 발생했습니다.");
-      }
-    }
-  };
-
-  const handleKickMember = async (targetId, targetName) => {
-    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
-    if (window.confirm(`${targetName}님을 강퇴하시겠습니까?`)) {
-      const success = await removeMember(activeRoom.id, targetId);
-      if (success) {
-        if (activeMemberId === targetId) setActiveMemberId(user.uid);
-        loadRooms();
-      } else {
-        alert("오류가 발생했습니다.");
-      }
-    }
-  };
-
-  const handleTransferOwnership = async (targetId, targetName) => {
-    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
-    if (window.confirm(`정말로 ${targetName}님에게 방장을 위임하시겠습니까? 본인은 일반 멤버가 됩니다.`)) {
-      const success = await transferOwnership(activeRoom.id, targetId);
-      if (success) {
         loadRooms();
       } else {
         alert("오류가 발생했습니다.");
@@ -70,12 +45,7 @@ export function ScheduleView() {
       }
 
       const currentPlan = memberScheduleData.plans.find(p => p.id === selectedPlanId) || memberScheduleData.plans[0];
-      const categories = memberScheduleData.categories || {};
-      
-      blocksToRender = (currentPlan?.blocks || []).filter(block => {
-        const cat = categories[block.category];
-        return cat ? cat.isShared !== false : true;
-      });
+      blocksToRender = currentPlan?.blocks || [];
     }
 
     return (
@@ -105,10 +75,9 @@ export function ScheduleView() {
     return (
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem', textAlign: 'center' }}>
         <Users size={56} style={{ opacity: 0.25 }} />
-        <h2 style={{ fontWeight: '900', fontSize: '1.5rem' }}>미리보기 모드</h2>
+        <h2 style={{ fontWeight: '900', fontSize: '1.5rem' }}>{t('preview_mode_title')}</h2>
         <p style={{ color: 'var(--text-muted)', fontWeight: 'bold', maxWidth: '400px', lineHeight: 1.6 }}>
-          시간표 및 게시판은 방에 참여한 멤버에게만 공개됩니다.<br/>
-          방에 참여하면 모든 멤버의 공유 일정을 볼 수 있습니다.
+          {t('preview_mode_desc')}
         </p>
         <p style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-muted)' }}>
           {activeRoom.memberIds?.length || 0}명 참여 중 · 초대 코드: <strong>{activeRoom.inviteCode}</strong>
@@ -119,6 +88,7 @@ export function ScheduleView() {
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      {/* Sidebar: Members */}
       <div style={{ width: '270px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)', flexShrink: 0 }}>
         <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', color: 'var(--text-main)' }}>
           <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
@@ -226,24 +196,13 @@ export function ScheduleView() {
       </div>
       
       {/* Schedule Main Content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'white', position: 'relative' }}>
-        <div style={{ padding: '1.5rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--bg-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ margin: '0 0 0.5rem 0', fontWeight: '900', fontSize: '1.5rem' }}>
-              {activeMemberId === '__all__' ? '전체 멤버 일정 모아보기' : `${activeRoom.memberDetails?.[activeMemberId]?.name || '알 수 없음'}님의 시간표`}
-            </h2>
-            <p style={{ margin: 0, color: 'var(--text-main)', fontWeight: 'bold' }}>
-              {activeMemberId === '__all__' 
-                ? '모든 멤버의 공유된 일정이 함께 표시됩니다.'
-                : '공유를 허용한 일정만 표시됩니다.'}
-            </p>
-          </div>
-          {activeRoom.ownerId === user.uid && activeMemberId !== '__all__' && activeMemberId !== user.uid && (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-               <button className="btn btn-sm" onClick={() => handleTransferOwnership(activeMemberId, activeRoom.memberDetails?.[activeMemberId]?.name)}>방장 위임</button>
-               <button className="btn btn-sm btn-danger" onClick={() => handleKickMember(activeMemberId, activeRoom.memberDetails?.[activeMemberId]?.name)}>강퇴</button>
-            </div>
-          )}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'white', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ padding: '0.65rem 1.25rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--bg-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '44px' }}>
+          <h2 style={{ margin: 0, fontWeight: '900', fontSize: '1.15rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {activeMemberId === '__all__' 
+              ? t('all_members_heatmap') 
+              : `${activeRoom.memberDetails?.[activeMemberId]?.name || '알 수 없음'}${lang === 'ko' ? '님의 시간표' : (lang === 'zh' ? '的时间表' : "'s Schedule")}`}
+          </h2>
         </div>
         {renderMemberSchedule()}
       </div>

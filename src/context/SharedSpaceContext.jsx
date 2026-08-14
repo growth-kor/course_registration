@@ -134,9 +134,6 @@ export function SharedSpaceProvider({
                const mPlan = mData.plans.find(p => p.id === mSharedPlanId) || mData.plans[0];
                if (mPlan && mPlan.blocks) {
                   mPlan.blocks.forEach(b => {
-                     const cat = mData.categories?.[b.category];
-                     if (cat && cat.isShared === false) return;
-
                      (b.timeSlots || []).forEach(ts => {
                          const key = `${ts.dayOfWeek}_${ts.startTime}_${ts.endTime}`;
                          if (!groupedBlocks[key]) {
@@ -167,32 +164,38 @@ export function SharedSpaceProvider({
         setSelectedPlanId('__all__');
       } else {
         try {
-          const data = await loadScheduleFromFirestore(activeMemberId);
-          if (data) {
+          let data = await loadScheduleFromFirestore(activeMemberId);
+          // If viewing own schedule and Firestore data is empty or missing, fallback to local plans
+          if (activeMemberId === user?.uid && (!data || !data.plans || data.plans.length === 0) && plans && plans.length > 0) {
+            data = { plans, categories: {} };
+          }
+
+          if (data && data.plans && data.plans.length > 0) {
             setMemberScheduleData(data);
             const memberSharedPlanId = activeRoom?.memberDetails?.[activeMemberId]?.sharedPlanId;
-            const defaultPlanId = data.plans && data.plans.length > 0 ? data.plans[0].id : '';
+            const defaultPlanId = data.plans[0].id;
             
-            if (activeMemberId === user?.uid) {
-               setSelectedPlanId(memberSharedPlanId || defaultPlanId);
-            } else {
-               const hasSharedPlan = data.plans?.some(p => p.id === memberSharedPlanId);
-               setSelectedPlanId(hasSharedPlan ? memberSharedPlanId : defaultPlanId);
-            }
+            const matchedPlan = data.plans.find(p => p.id === memberSharedPlanId);
+            setSelectedPlanId(matchedPlan ? memberSharedPlanId : defaultPlanId);
           } else {
             setMemberScheduleData({ plans: [], categories: {} });
             setSelectedPlanId('');
           }
         } catch (err) {
           console.error("Error loading schedule from firestore", err);
-          setMemberScheduleData({ plans: [], categories: {} });
-          setSelectedPlanId('');
+          if (activeMemberId === user?.uid && plans && plans.length > 0) {
+            setMemberScheduleData({ plans, categories: {} });
+            setSelectedPlanId(plans[0].id);
+          } else {
+            setMemberScheduleData({ plans: [], categories: {} });
+            setSelectedPlanId('');
+          }
         }
       }
       setLoadingSchedule(false);
     }
     loadMemberSchedule();
-  }, [activeMemberId, activeRoom, user?.uid]);
+  }, [activeMemberId, activeRoom, user?.uid, plans]);
 
   const loadPosts = async () => {
     if (!activeRoom) return;

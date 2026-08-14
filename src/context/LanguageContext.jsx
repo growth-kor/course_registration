@@ -154,13 +154,90 @@ export const translations = {
     single_member_schedule_desc: 'Only categories marked as public are displayed.',
     preview_mode_title: 'Preview Mode',
     preview_mode_desc: 'Full timetable and board are visible to room members.\nJoin this room to view all members shared schedules.',
+  },
+  zh: {
+    // Header & Brand
+    brand_title: '每周日程规划器',
+    my_schedule: '我的时间表',
+    shared_schedule: '共享时间表',
+    dark_mode: '暗黑',
+    light_mode: '明亮',
+    login: '登录',
+    profile_settings: '个人资料设置',
+    add_block: '添加新日程',
+    quick_delete: '快速删除',
+    cancel: '取消',
+    confirm_delete: '确认删除',
+    weekday_5days: '仅周一~周五',
+    weekday_7days: '显示整周 (周一~周日)',
+    time_analytics: '时间分析',
+    backup_restore: '备份 / 恢复',
+    fullscreen: '全屏模式',
+    plan_rename: '重命名',
+    plan_add: '新建计划',
+    plan_delete: '删除',
+    prompt_rename_plan: '重命名当前计划:',
+    prompt_new_plan: '输入新计划名称:',
+    confirm_delete_plan: '确定要删除当前计划吗？(删除后无法恢复)',
+    selected_slots_count: '已选时间段',
+    add_to_selected: '添加到选定时段',
+    today: '今天',
+    time_col: '时间',
+
+    // Days of week
+    days: {
+      1: { short: '一', full: '周一' },
+      2: { short: '二', full: '周二' },
+      3: { short: '三', full: '周三' },
+      4: { short: '四', full: '周四' },
+      5: { short: '五', full: '周五' },
+      6: { short: '六', full: '周六' },
+      7: { short: '日', full: '周日' }
+    },
+
+    // Categories
+    cat_class: '固定课程',
+    cat_self_study: '自习',
+    cat_routine: '运动',
+    cat_other: '休息',
+
+    // Footer
+    footer_guide: '使用说明书',
+    footer_github: '官方页面 / GitHub',
+    footer_lang: '语言: 简体中文',
+
+    // Shared Space
+    dashboard: '控制面板',
+    dashboard_title: '共享空间面板',
+    my_rooms: '我的共享房间',
+    explore_rooms: '探索公开房间',
+    create_room: '创建新房间',
+    join_with_code: '邀请码加入',
+    tab_schedule: '时间表',
+    tab_board: '讨论区',
+    room_settings: '房间设置',
+    join_this_room: '加入此房间',
+    members_count: '成员列表',
+    all_members_heatmap: '全部成员热力图',
+    leave_room: '退出房间',
+    room_owner: '房主',
+    room_me: '我',
+    public: '公开',
+    private: '私密',
+    copy_code: '复制',
+    copied: '复制成功!',
+    all_members_schedule_desc: '汇集所有成员共享日程的热力图。',
+    single_member_schedule_desc: '显示成员公开的时间表。',
+    preview_mode_title: '预览模式',
+    preview_mode_desc: '完整时间表和讨论区仅对房间成员开放。\n加入房间即可查看所有成员的共享日程。',
   }
 };
 
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState(() => {
     const saved = localStorage.getItem('planner_language');
-    if (saved === 'en' || saved === 'ko') return saved;
+    if (saved === 'en' || saved === 'ko' || saved === 'zh') return saved;
+    if (navigator.language?.startsWith('zh')) return 'zh';
     return navigator.language?.startsWith('ko') ? 'ko' : 'en';
   });
 
@@ -169,7 +246,11 @@ export function LanguageProvider({ children }) {
   }, [lang]);
 
   const toggleLanguage = () => {
-    setLang(prev => (prev === 'ko' ? 'en' : 'ko'));
+    setLang(prev => {
+      if (prev === 'ko') return 'en';
+      if (prev === 'en') return 'zh';
+      return 'ko';
+    });
   };
 
   const t = (key) => {
@@ -187,7 +268,6 @@ export function LanguageProvider({ children }) {
 export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) {
-    // Fallback if rendered outside provider
     return {
       lang: 'ko',
       setLang: () => {},

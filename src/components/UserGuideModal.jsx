@@ -18,13 +18,19 @@ export function UserGuideModal({ isOpen, onClose }) {
     { id: 'analytics', label: 'Time Analytics', icon: <BarChart2 size={16} /> },
     { id: 'shared', label: 'Shared Space', icon: <Users size={16} /> },
     { id: 'settings', label: 'Backup / Theme / Tips', icon: <Settings size={16} /> },
+  ] : (lang === 'zh' ? [
+    { id: 'basic', label: '基础使用指南', icon: <BookOpen size={16} /> },
+    { id: 'shortcuts', label: '快捷键与手势', icon: <Keyboard size={16} /> },
+    { id: 'analytics', label: '时间分析与统计', icon: <BarChart2 size={16} /> },
+    { id: 'shared', label: '共享空间', icon: <Users size={16} /> },
+    { id: 'settings', label: '备份 / 主题 / 技巧', icon: <Settings size={16} /> },
   ] : [
     { id: 'basic', label: '기본 사용법', icon: <BookOpen size={16} /> },
     { id: 'shortcuts', label: '단축키 & 제스처', icon: <Keyboard size={16} /> },
     { id: 'analytics', label: '시간 분석 & 통계', icon: <BarChart2 size={16} /> },
     { id: 'shared', label: '공유 시간표 (스페이스)', icon: <Users size={16} /> },
     { id: 'settings', label: '백업 / 테마 / 팁', icon: <Settings size={16} /> },
-  ];
+  ]);
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
@@ -56,14 +62,14 @@ export function UserGuideModal({ isOpen, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <span style={{ fontSize: '1.4rem' }}>📖</span>
             <h2 style={{ margin: 0, fontWeight: '900', fontSize: '1.35rem', color: 'var(--text-main)' }}>
-              {lang === 'en' ? 'Weekly Schedule Planner User Guide' : '주간 일정 플래너 사용 설명서'}
+              {lang === 'en' ? 'Weekly Schedule Planner User Guide' : (lang === 'zh' ? '每周日程规划器使用说明书' : '주간 일정 플래너 사용 설명서')}
             </h2>
           </div>
           <button 
             className="btn btn-sm"
             onClick={onClose}
             style={{ padding: '0.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            title={lang === 'en' ? "Close (Esc)" : "닫기 (Esc)"}
+            title={lang === 'en' ? "Close (Esc)" : (lang === 'zh' ? "关闭 (Esc)" : "닫기 (Esc)")}
           >
             <X size={18} />
           </button>

@@ -177,33 +177,6 @@ export function BlockModal({
                     <span className="cat-icon">{cat.icon}</span>
                     <span className="cat-label">{cat.label}</span>
                   </button>
-                  <button
-                    type="button"
-                    title={cat.isShared ? "공유방에 공개됨" : "비공개 (나만 보기)"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onUpdateCategory) {
-                        onUpdateCategory(cat.id, { isShared: !cat.isShared });
-                      }
-                    }}
-                    style={{
-                      position: 'absolute',
-                      top: '-4px',
-                      left: '-4px',
-                      background: cat.isShared ? '#bbf7d0' : '#f1f5f9',
-                      border: '1px solid var(--border-main)',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      zIndex: 2
-                    }}
-                  >
-                    {cat.isShared ? <Globe size={10} color="#166534" /> : <Lock size={10} color="#64748b" />}
-                  </button>
                   {!['class', 'self_study', 'routine', 'other'].includes(cat.id) && (
                     <button
                       type="button"

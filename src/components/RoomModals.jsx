@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, Trash2, Upload, X } from 'lucide-react';
 import { useSharedSpace } from '../context/SharedSpaceContext';
+import { useLanguage } from '../context/LanguageContext';
 import { createRoom, joinRoomByCode, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, updateRoomInfo, uploadRoomImage } from '../firebase/config';
 
 // Compress image using canvas to reduce Firebase Storage usage
@@ -50,6 +51,9 @@ export function RoomModals({
     plans, activeMemberId, setActiveMemberId,
     selectedPlanId, setSelectedPlanId
   } = useSharedSpace();
+  const { t } = useLanguage();
+
+  const [settingsTab, setSettingsTab] = useState('info'); // 'info' | 'members'
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
@@ -84,6 +88,32 @@ export function RoomModals({
       if (success) {
         setActiveRoom(null);
         loadRooms();
+      } else {
+        alert("오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const handleKickMember = async (targetId, targetName) => {
+    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
+    if (window.confirm(`${targetName}님을 이 방에서 강퇴하시겠습니까?`)) {
+      const success = await removeMember(activeRoom.id, targetId);
+      if (success) {
+        if (activeMemberId === targetId) setActiveMemberId(user.uid);
+        loadRooms();
+      } else {
+        alert("오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const handleTransferOwnership = async (targetId, targetName) => {
+    if (!activeRoom || activeRoom.ownerId !== user.uid) return;
+    if (window.confirm(`정말로 ${targetName}님에게 방장을 위임하시겠습니까? 위임 후 본인은 일반 멤버가 됩니다.`)) {
+      const success = await transferOwnership(activeRoom.id, targetId);
+      if (success) {
+        loadRooms();
+        setShowRoomSettingsModal(false);
       } else {
         alert("오류가 발생했습니다.");
       }
@@ -293,102 +323,218 @@ export function RoomModals({
 
       {showRoomSettingsModal && activeRoom && (
         <div className="modal-overlay" onClick={() => setShowRoomSettingsModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem' }}>⚙️ 방 설정 변경</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 이름</label>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  value={settingsName}
-                  onChange={e => setSettingsName(e.target.value)}
-                />
-              </div>
-              <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 소개글</label>
-                <textarea 
-                  className="input-field" 
-                  value={settingsDesc}
-                  onChange={e => setSettingsDesc(e.target.value)}
-                  placeholder="우리 방을 소개하는 짧은 글을 적어주세요!"
-                  style={{ resize: 'vertical', minHeight: '80px' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>
-                  방 대표 이미지
-                  <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>파일 업로드 시 자동 압축 (최대 150KB)</span>
-                </label>
-                {/* Preview */}
-                {settingsImagePreview && (
-                  <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.75rem' }}>
-                    <img 
-                      src={settingsImagePreview} 
-                      alt="preview"
-                      style={{ width: '72px', height: '72px', objectFit: 'cover', border: '2px solid var(--border-main)', borderRadius: '50%' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { setSettingsImagePreview(null); setSettingsImageFile(null); setSettingsImageUrl(''); }}
-                      style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--text-main)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                )}
-                {/* File Upload */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.55rem 1rem', border: '2px dashed var(--border-main)', fontWeight: 'bold', backgroundColor: '#f8fafc', marginBottom: '0.5rem' }}>
-                  <Upload size={15} />
-                  {settingsImageFile ? settingsImageFile.name : '파일 선택 (JPG, PNG, WEBP)'}
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleRoomImageChange}
-                  />
-                </label>
-                {/* URL Input */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>또는 URL</span>
-                  <input
-                    type="text"
-                    className="input-field"
-                    value={settingsImageUrl}
-                    onChange={e => {
-                      setSettingsImageUrl(e.target.value);
-                      setSettingsImageFile(null); // clear file when URL is typed
-                      if (e.target.value.trim()) {
-                        setSettingsImagePreview(e.target.value.trim());
-                      } else {
-                        setSettingsImagePreview(null);
-                      }
-                    }}
-                    placeholder="https://... 이미지 주소 직접 입력"
-                    style={{ flex: 1, fontSize: '0.85rem', padding: '0.45rem 0.75rem' }}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border-main)' }}>
-                <span style={{ fontWeight: 'bold' }}>방 삭제</span>
-                <button className="btn btn-sm btn-danger" onClick={() => {
-                  setShowRoomSettingsModal(false);
-                  handleDeleteRoom();
-                }}>
-                  <Trash2 size={16}/> 이 방 완전히 삭제하기
-                </button>
-              </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-              <button className="btn" onClick={() => setShowRoomSettingsModal(false)}>취소</button>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '580px', width: '95%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border-main)', paddingBottom: '0.8rem', marginBottom: '1.2rem' }}>
+              <h2 style={{ margin: 0, fontWeight: '900', fontSize: '1.3rem' }}>⚙️ {t('room_settings')}</h2>
               <button 
-                className="btn btn-primary" 
-                onClick={handleSaveRoomSettings}
-                disabled={isUploadingRoomImage || !settingsName.trim()}
+                type="button" 
+                onClick={() => setShowRoomSettingsModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
               >
-                {isUploadingRoomImage ? '저장 중...' : '저장'}
+                <X size={20} />
               </button>
             </div>
+
+            {/* Settings Tabs */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-main)', paddingBottom: '0.5rem' }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setSettingsTab('info')}
+                style={{
+                  padding: '0.45rem 0.9rem',
+                  fontWeight: '900',
+                  backgroundColor: settingsTab === 'info' ? 'var(--text-main)' : 'white',
+                  color: settingsTab === 'info' ? 'white' : 'var(--text-main)',
+                  boxShadow: settingsTab === 'info' ? 'none' : 'var(--shadow-hard-sm)'
+                }}
+              >
+                기본 정보
+              </button>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setSettingsTab('members')}
+                style={{
+                  padding: '0.45rem 0.9rem',
+                  fontWeight: '900',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  backgroundColor: settingsTab === 'members' ? 'var(--text-main)' : 'white',
+                  color: settingsTab === 'members' ? 'white' : 'var(--text-main)',
+                  boxShadow: settingsTab === 'members' ? 'none' : 'var(--shadow-hard-sm)'
+                }}
+              >
+                <Users size={15} /> 멤버 관리 ({activeRoom.memberIds?.length || 0})
+              </button>
+            </div>
+
+            {settingsTab === 'info' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div>
+                  <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.4rem' }}>방 이름</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={settingsName}
+                    onChange={e => setSettingsName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.4rem' }}>방 소개글</label>
+                  <textarea 
+                    className="input-field" 
+                    value={settingsDesc}
+                    onChange={e => setSettingsDesc(e.target.value)}
+                    placeholder="우리 방을 소개하는 짧은 글을 적어주세요!"
+                    style={{ resize: 'vertical', minHeight: '70px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.4rem' }}>
+                    방 대표 이미지
+                    <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>파일 업로드 시 자동 압축 (최대 150KB)</span>
+                  </label>
+                  {/* Preview */}
+                  {settingsImagePreview && (
+                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.6rem' }}>
+                      <img 
+                        src={settingsImagePreview} 
+                        alt="preview" 
+                        style={{ width: '64px', height: '64px', objectFit: 'cover', border: '2px solid var(--border-main)', borderRadius: '50%' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => { setSettingsImagePreview(null); setSettingsImageFile(null); setSettingsImageUrl(''); }}
+                        style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--text-main)', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
+                      >
+                        <X size={11} />
+                      </button>
+                    </div>
+                  )}
+                  {/* File Upload */}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.5rem 0.9rem', border: '2px dashed var(--border-main)', fontWeight: 'bold', backgroundColor: '#f8fafc', marginBottom: '0.4rem', fontSize: '0.9rem' }}>
+                    <Upload size={15} />
+                    {settingsImageFile ? settingsImageFile.name : '파일 선택 (JPG, PNG, WEBP)'}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleRoomImageChange}
+                    />
+                  </label>
+                  {/* URL Input */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>또는 URL</span>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={settingsImageUrl}
+                      onChange={e => {
+                        setSettingsImageUrl(e.target.value);
+                        setSettingsImageFile(null);
+                        if (e.target.value.trim()) {
+                          setSettingsImagePreview(e.target.value.trim());
+                        } else {
+                          setSettingsImagePreview(null);
+                        }
+                      }}
+                      placeholder="https://... 이미지 주소 직접 입력"
+                      style={{ flex: 1, fontSize: '0.85rem', padding: '0.4rem 0.7rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-main)' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>방 삭제</span>
+                  <button className="btn btn-sm btn-danger" onClick={() => {
+                    setShowRoomSettingsModal(false);
+                    handleDeleteRoom();
+                  }}>
+                    <Trash2 size={15}/> 이 방 삭제
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                  <button className="btn" onClick={() => setShowRoomSettingsModal(false)}>취소</button>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={handleSaveRoomSettings}
+                    disabled={isUploadingRoomImage || !settingsName.trim()}
+                  >
+                    {isUploadingRoomImage ? '저장 중...' : '저장'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Members Management Tab */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '420px', overflowY: 'auto' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                  방장 권한으로 멤버를 강퇴하거나 방장 권한을 위임할 수 있습니다.
+                </div>
+                {activeRoom.memberIds?.map(mId => {
+                  const mInfo = activeRoom.memberDetails?.[mId] || { name: '알 수 없음' };
+                  const isOwner = activeRoom.ownerId === mId;
+                  const isMe = mId === user.uid;
+
+                  return (
+                    <div 
+                      key={mId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.75rem 1rem',
+                        border: '2px solid var(--border-main)',
+                        backgroundColor: isMe ? '#f8fafc' : 'white',
+                        boxShadow: 'var(--shadow-hard-sm)',
+                        gap: '0.75rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0, flex: 1 }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2px solid var(--border-main)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '0.85rem', backgroundColor: 'white', flexShrink: 0 }}>
+                          {mInfo.name ? mInfo.name.substring(0, 1) : '?'}
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: '800', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)' }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mInfo.name}</span>
+                            {isOwner && <span style={{ fontSize: '0.65rem', backgroundColor: 'var(--text-main)', color: 'white', padding: '0.05rem 0.3rem', fontWeight: '900' }}>방장</span>}
+                            {isMe && <span style={{ fontSize: '0.65rem', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.3rem', fontWeight: 'bold' }}>나</span>}
+                          </div>
+                          {mInfo.statusMessage && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              "{mInfo.statusMessage}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {activeRoom.ownerId === user.uid && !isOwner && (
+                        <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                          <button 
+                            type="button"
+                            className="btn btn-sm"
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', fontWeight: 'bold' }}
+                            onClick={() => handleTransferOwnership(mId, mInfo.name)}
+                          >
+                            방장 위임
+                          </button>
+                          <button 
+                            type="button"
+                            className="btn btn-sm btn-danger"
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', fontWeight: 'bold' }}
+                            onClick={() => handleKickMember(mId, mInfo.name)}
+                          >
+                            강퇴
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

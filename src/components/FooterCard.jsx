@@ -55,11 +55,11 @@ export function FooterCard({ onOpenGuide }) {
           type="button"
           onClick={toggleLanguage}
           className="btn footer-action-btn"
-          title="언어 변경 (KO / EN) / Switch Language"
+          title="언어 변경 (KO / EN / ZH) / Switch Language"
           style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontWeight: 'bold' }}
         >
           <Globe size={15} />
-          <span>{lang === 'ko' ? '🌐 한국어 (KO)' : '🌐 English (EN)'}</span>
+          <span>{lang === 'ko' ? '🌐 한국어 (KO)' : (lang === 'en' ? '🌐 English (EN)' : '🌐 简体中文 (ZH)')}</span>
         </button>
 
         <a 

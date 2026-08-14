@@ -1,8 +1,8 @@
 export const CATEGORIES = {
-  class: { id: 'class', label: '고정 수업', icon: '🎓', defaultColor: '#7dd3fc', isShared: true },
-  self_study: { id: 'self_study', label: '자습', icon: '📖', defaultColor: '#ffe600', isShared: true },
-  routine: { id: 'routine', label: '운동', icon: '🏋️', defaultColor: '#7ef6d6', isShared: false },
-  other: { id: 'other', label: '휴식', icon: '☕', defaultColor: '#d8b4fe', isShared: false }
+  class: { id: 'class', label: '고정 수업', icon: '🎓', defaultColor: '#7dd3fc' },
+  self_study: { id: 'self_study', label: '자습', icon: '📖', defaultColor: '#ffe600' },
+  routine: { id: 'routine', label: '운동', icon: '🏋️', defaultColor: '#7ef6d6' },
+  other: { id: 'other', label: '휴식', icon: '☕', defaultColor: '#d8b4fe' }
 };
 
 export const HIGHLIGHT_COLORS = [
