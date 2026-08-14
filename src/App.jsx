@@ -39,6 +39,20 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'shared'
 
+  // Dark Mode State
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('brutalist_dark_mode') === 'true';
+  });
+
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+    }
+    localStorage.setItem('brutalist_dark_mode', isDarkMode);
+  }, [isDarkMode]);
+
   // Modal Visibility States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
@@ -205,6 +219,8 @@ export default function App() {
         onToggleFullscreen={toggleFullscreen}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
       />
       )}
 

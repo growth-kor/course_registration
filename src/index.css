@@ -26,6 +26,31 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+/* Dark Mode Variables */
+:root.dark-mode {
+  --bg-paper: #121212;
+  --bg-card: #1e1e1e;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --border-main: #374151;
+  --border-grid: #374151;
+  --border-grid-dark: #4b5563;
+
+  /* Adjust Highlighter Colors for Dark Mode if needed */
+  --hl-yellow: #a16207;
+  --hl-mint: #0f766e;
+  --hl-orange: #c2410c;
+  --hl-lavender: #6b21a8;
+  --hl-sky: #0369a1;
+  --hl-lime: #4d7c0f;
+  --hl-pink: #be185d;
+  --hl-sand: #854d0e;
+  
+  --shadow-hard: 3px 3px 0px #000000;
+  --shadow-hard-lg: 5px 5px 0px #000000;
+  --shadow-hard-sm: 2px 2px 0px #000000;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

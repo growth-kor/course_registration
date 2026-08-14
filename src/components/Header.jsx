@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Calendar, BarChart2, Cloud, FileJson, Trash2, CheckSquare, Maximize } from 'lucide-react';
+import { Plus, Calendar, BarChart2, Cloud, FileJson, Trash2, CheckSquare, Maximize, Moon, Sun } from 'lucide-react';
 import { calculateCategoryStats } from '../utils/timeUtils';
 
 export function Header({
@@ -24,7 +24,9 @@ export function Header({
   onToggleFullscreen,
   categories,
   activeTab,
-  onTabChange
+  onTabChange,
+  isDarkMode,
+  onToggleDarkMode
 }) {
   const safeCategories = categories || {};
   const stats = calculateCategoryStats(blocks, safeCategories);
@@ -158,6 +160,10 @@ export function Header({
 
           <button className="btn" onClick={onToggleFullscreen} title="전체화면 (f)">
             <Maximize size={16} /> 전체화면
+          </button>
+
+          <button className="btn" onClick={onToggleDarkMode} title="다크 모드 전환">
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
 

@@ -66,24 +66,35 @@ export async function logoutUser() {
   }
 }
 
-export async function updateUserProfile(user, newName) {
+export async function updateUserProfile(user, newName, statusMessage) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !user) return false;
 
   try {
-    // 1. Update Firebase Auth Profile
-    await updateProfile(user, { displayName: newName });
+    // 1. Update Firebase Auth Profile if name changed
+    if (newName && newName !== user.displayName) {
+      await updateProfile(user, { displayName: newName });
+    }
 
-    // 2. Update user's name in all rooms they belong to
+    // 2. Save to users collection
+    const userRef = doc(db, 'users', user.uid);
+    const userUpdates = {};
+    if (newName) userUpdates.name = newName;
+    if (statusMessage !== undefined) userUpdates.statusMessage = statusMessage;
+    await setDoc(userRef, userUpdates, { merge: true });
+
+    // 3. Update user's name and status in all rooms they belong to
     const q = query(collection(db, 'rooms'), where('memberIds', 'array-contains', user.uid));
     const querySnapshot = await getDocs(q);
     
     // Process each room individually
     const promises = querySnapshot.docs.map(roomDoc => {
       const roomRef = doc(db, 'rooms', roomDoc.id);
-      return updateDoc(roomRef, {
-        [`memberDetails.${user.uid}.name`]: newName
-      });
+      const updates = {};
+      if (newName) updates[`memberDetails.${user.uid}.name`] = newName;
+      if (statusMessage !== undefined) updates[`memberDetails.${user.uid}.statusMessage`] = statusMessage;
+      
+      return Object.keys(updates).length > 0 ? updateDoc(roomRef, updates) : Promise.resolve();
     });
     
     await Promise.all(promises);
@@ -91,6 +102,23 @@ export async function updateUserProfile(user, newName) {
   } catch (err) {
     console.error("Error updating user profile:", err);
     return false;
+  }
+}
+
+export async function getUserProfile(userId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !userId) return null;
+
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      return userSnap.data();
+    }
+    return null;
+  } catch (err) {
+    console.error("Error fetching user profile:", err);
+    return null;
   }
 }
 
@@ -234,6 +262,20 @@ export async function removeMember(roomId, userId) {
   }
 }
 
+export async function updateRoomInfo(roomId, updates) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId) return false;
+
+  try {
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, updates);
+    return true;
+  } catch (e) {
+    console.error("Error updating room info:", e);
+    return false;
+  }
+}
+
 export async function deleteRoom(roomId) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !roomId) return false;
@@ -329,6 +371,11 @@ export async function addPost(roomId, userId, userName, category, title, content
       createdAt: new Date().toISOString()
     };
     const newDoc = await addDoc(postsRef, postData);
+    
+    // Update room lastActivityAt
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, { lastActivityAt: new Date().toISOString() });
+    
     return { id: newDoc.id, ...postData };
   } catch (e) {
     console.error("Error adding post:", e);
@@ -444,6 +491,10 @@ export async function addComment(roomId, postId, userId, userName, content) {
     // Increment comment count on post
     const postRef = doc(db, 'rooms', roomId, 'posts', postId);
     await updateDoc(postRef, { commentCount: increment(1) }).catch(() => {});
+
+    // Update room lastActivityAt
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, { lastActivityAt: new Date().toISOString() }).catch(() => {});
 
     return { id: newDoc.id, ...commentData };
   } catch (e) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Trash2, Send, Calendar, Edit2, ThumbsUp, Eye } from 'lucide-react';
-import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, fetchPosts, addPost, deletePost, updatePost, incrementPostView, togglePostLike, fetchComments, addComment, deleteComment } from '../firebase/config';
+import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, updateRoomInfo, fetchPosts, addPost, deletePost, updatePost, incrementPostView, togglePostLike, fetchComments, addComment, deleteComment } from '../firebase/config';
 import { WeeklyGrid } from './WeeklyGrid';
 
 export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpenProfileSettings }) {
@@ -30,10 +30,17 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showPlanChangeModal, setShowPlanChangeModal] = useState(false);
+  const [showRoomSettingsModal, setShowRoomSettingsModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [joinCode, setJoinCode] = useState('');
   const [sharedPlanIdToJoin, setSharedPlanIdToJoin] = useState('');
+  
+  // Board Search & Pagination
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('title'); // 'title', 'content', 'author'
+  const [currentPage, setCurrentPage] = useState(1);
+  const POSTS_PER_PAGE = 15;
 
   useEffect(() => {
     if (plans && plans.length > 0 && !sharedPlanIdToJoin) {
@@ -76,6 +83,9 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
 
   useEffect(() => {
     if (activeRoom) {
+      // Set last visited time
+      localStorage.setItem(`last_visited_${activeRoom.id}`, new Date().toISOString());
+      
       // default to owner or self
       setActiveMemberId(activeRoom.ownerId);
     }
@@ -472,12 +482,36 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                             flexDirection: 'column',
                             gap: '1rem',
                             cursor: 'pointer',
+                            position: 'relative',
                             transition: 'transform 0.1s'
                           }}
                           onClick={() => setActiveRoom(room)}
                           onMouseEnter={(e) => e.currentTarget.style.transform = 'translate(-4px, -4px)'}
                           onMouseLeave={(e) => e.currentTarget.style.transform = 'translate(0, 0)'}
                         >
+                          {(() => {
+                            const lastVisited = localStorage.getItem(`last_visited_${room.id}`);
+                            const hasNewActivity = room.lastActivityAt && (!lastVisited || new Date(room.lastActivityAt) > new Date(lastVisited));
+                            return hasNewActivity ? (
+                              <div style={{
+                                position: 'absolute',
+                                top: '-8px',
+                                right: '-8px',
+                                backgroundColor: '#ef4444',
+                                color: 'white',
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 'bold',
+                                fontSize: '0.8rem',
+                                border: '2px solid var(--border-main)',
+                                zIndex: 10
+                              }}>N</div>
+                            ) : null;
+                          })()}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900', fontSize: '1.2rem' }}>
                             {room.isPublic ? <Globe size={20} color="#166534" /> : <Lock size={20} color="#64748b" />}
                             {room.name}
@@ -606,16 +640,21 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
           <div className="shared-main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div className="room-header" style={{ padding: '1.25rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
+                <div style={{ flex: 1 }}>
                   <h2 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '900' }}>
                     {activeRoom.isPublic ? <Globe size={24} color="var(--border-main)" /> : <Lock size={24} color="var(--border-main)" />}
                     {activeRoom.name}
                     {activeRoom.ownerId === user.uid && <span style={{ fontSize: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>(방장)</span>}
                   </h2>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {activeRoom.description && (
+                    <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{activeRoom.description}</p>
+                  )}
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     초대 코드: <span style={{ fontFamily: 'monospace', backgroundColor: 'var(--color-primary)', padding: '0.2rem 0.5rem', border: '2px solid var(--border-main)', borderRadius: '4px', boxShadow: 'var(--shadow-hard-sm)', userSelect: 'all' }}>{activeRoom.inviteCode}</span>
                     {activeRoom.ownerId === user.uid ? (
-                      <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: 'white' }} onClick={handleDeleteRoom}>방 삭제</button>
+                      <>
+                        <button className="btn btn-sm" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: 'white' }} onClick={() => setShowRoomSettingsModal(true)}>방 설정</button>
+                      </>
                     ) : (
                       <button className="btn" style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: '#f1f5f9' }} onClick={handleLeaveRoom}>방 나가기</button>
                     )}
@@ -676,8 +715,62 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '2rem' }}>
                     {/* Board UI */}
                     <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' }}>
-                      {boardView === 'list' && (
+                      {boardView === 'list' && (() => {
+                        const filteredPosts = posts.filter(post => {
+                          if (!searchQuery.trim()) return true;
+                          const query = searchQuery.toLowerCase();
+                          if (searchType === 'title') return (post.title || '').toLowerCase().includes(query);
+                          if (searchType === 'content') return (post.content || '').toLowerCase().includes(query);
+                          if (searchType === 'author') return (post.authorName || '').toLowerCase().includes(query);
+                          return true;
+                        });
+                        
+                        const totalPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE));
+                        const currentPosts = filteredPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
+
+                        return (
                         <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                              <select 
+                                className="input-field" 
+                                value={searchType} 
+                                onChange={e => setSearchType(e.target.value)}
+                                style={{ padding: '0.5rem', width: '100px' }}
+                              >
+                                <option value="title">제목</option>
+                                <option value="content">내용</option>
+                                <option value="author">작성자</option>
+                              </select>
+                              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <Search size={16} style={{ position: 'absolute', left: '0.5rem', color: 'var(--text-muted)' }} />
+                                <input 
+                                  type="text" 
+                                  className="input-field" 
+                                  placeholder="게시글 검색..." 
+                                  value={searchQuery}
+                                  onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                  style={{ padding: '0.5rem 0.5rem 0.5rem 2rem', width: '250px' }}
+                                />
+                              </div>
+                            </div>
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ padding: '0.5rem 1.5rem', fontWeight: 'bold' }} 
+                              onClick={() => {
+                                if (!user) {
+                                  onRequireLogin();
+                                  return;
+                                }
+                                setEditPostId(null);
+                                setNewPostTitle('');
+                                setNewPostContent('');
+                                setBoardView('write');
+                              }}
+                            >
+                              <Edit2 size={18} /> 새 글 쓰기
+                            </button>
+                          </div>
                           <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', overflow: 'hidden' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
                               <thead>
@@ -692,11 +785,11 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                               </thead>
                               <tbody>
                                 {loadingPosts ? (
-                                  <tr><td colSpan="4" style={{ padding: '3rem', fontWeight: 'bold' }}>불러오는 중...</td></tr>
-                                ) : posts.length === 0 ? (
-                                  <tr><td colSpan="4" style={{ padding: '3rem', fontWeight: 'bold', color: 'var(--text-main)' }}>아직 등록된 글이 없습니다.</td></tr>
+                                  <tr><td colSpan="6" style={{ padding: '3rem', fontWeight: 'bold' }}>불러오는 중...</td></tr>
+                                ) : currentPosts.length === 0 ? (
+                                  <tr><td colSpan="6" style={{ padding: '3rem', fontWeight: 'bold', color: 'var(--text-main)' }}>검색 결과가 없거나 등록된 글이 없습니다.</td></tr>
                                 ) : (
-                                  posts.map(post => (
+                                  currentPosts.map(post => (
                                     <tr 
                                       key={post.id} 
                                       style={{ borderBottom: '1px solid var(--border-main)', cursor: 'pointer', transition: 'background-color 0.2s' }} 
@@ -729,6 +822,37 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                               </tbody>
                             </table>
                           </div>
+
+                          {/* Pagination Controls */}
+                          {totalPages > 1 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+                              <button 
+                                className="btn btn-sm" 
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              >
+                                이전
+                              </button>
+                              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button 
+                                  key={page}
+                                  className={`btn btn-sm ${currentPage === page ? 'btn-primary' : ''}`}
+                                  onClick={() => setCurrentPage(page)}
+                                  style={{ padding: '0.2rem 0.6rem', minWidth: '32px' }}
+                                >
+                                  {page}
+                                </button>
+                              ))}
+                              <button 
+                                className="btn btn-sm" 
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                              >
+                                다음
+                              </button>
+                            </div>
+                          )}
+
                           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
                             <button 
                               className="btn btn-primary" 
@@ -744,7 +868,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                             </button>
                           </div>
                         </>
-                      )}
+                      )})}
 
                       {boardView === 'write' && (
                         <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', padding: '2.5rem' }}>
@@ -1052,6 +1176,66 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
               <button className="btn" onClick={() => setShowPlanChangeModal(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Room Settings Modal */}
+      {showRoomSettingsModal && activeRoom && (
+        <div className="modal-overlay" onClick={() => setShowRoomSettingsModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                <Edit2 size={24} /> 방 설정
+              </h2>
+            </div>
+            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 이름</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  defaultValue={activeRoom.name}
+                  id="editRoomName"
+                />
+              </div>
+              <div>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 소개글</label>
+                <textarea 
+                  className="input-field" 
+                  defaultValue={activeRoom.description || ''}
+                  id="editRoomDesc"
+                  placeholder="우리 방을 소개하는 짧은 글을 적어주세요!"
+                  style={{ resize: 'vertical', minHeight: '80px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                <span style={{ fontWeight: 'bold' }}>방 삭제</span>
+                <button className="btn btn-sm btn-danger" onClick={() => {
+                  setShowRoomSettingsModal(false);
+                  handleDeleteRoom();
+                }}>
+                  <Trash2 size={16}/> 이 방 완전히 삭제하기
+                </button>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <button className="btn" onClick={() => setShowRoomSettingsModal(false)}>취소</button>
+              <button className="btn btn-primary" onClick={async () => {
+                const newName = document.getElementById('editRoomName').value.trim();
+                const newDesc = document.getElementById('editRoomDesc').value.trim();
+                if (newName) {
+                  const success = await updateRoomInfo(activeRoom.id, { name: newName, description: newDesc });
+                  if (success) {
+                    setActiveRoom(prev => ({...prev, name: newName, description: newDesc}));
+                    setRooms(prev => prev.map(r => r.id === activeRoom.id ? {...r, name: newName, description: newDesc} : r));
+                  }
+                }
+                setShowRoomSettingsModal(false);
+              }}>
+                저장
+              </button>
             </div>
           </div>
         </div>
