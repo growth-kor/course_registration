@@ -295,7 +295,7 @@ function SharedSpaceContent() {
                               {room.description || '소개글이 없습니다.'}
                             </p>
                             <button 
-                              className="btn btn-primary"
+                              className={`btn ${isJoined ? '' : 'btn-primary'}`}
                               onClick={(e) => {
                                 if (!isJoined) {
                                   e.stopPropagation();
@@ -304,9 +304,16 @@ function SharedSpaceContent() {
                                   setShowJoinModal(true);
                                 }
                               }}
-                              style={{ width: '100%', fontWeight: 'bold' }}
+                              style={{ 
+                                width: '100%', 
+                                fontWeight: 'bold',
+                                backgroundColor: isJoined ? '#f1f5f9' : undefined,
+                                color: isJoined ? 'var(--text-muted)' : undefined,
+                                boxShadow: isJoined ? 'none' : undefined,
+                                border: isJoined ? '2px solid var(--border-main)' : undefined
+                              }}
                             >
-                              {isJoined ? '방으로 이동' : '방 가입하기'}
+                              {isJoined ? t('already_joined_room') : t('join_room_btn')}
                             </button>
                           </div>
                         );
