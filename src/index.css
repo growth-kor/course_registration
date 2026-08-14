@@ -303,19 +303,19 @@ body {
   margin-top: 0.75rem;
 }
 
-/* Main Content Area */
 .main-content-area {
   flex: 1;
   background: #ffffff;
   border: 2.5px solid var(--border-main);
   box-shadow: var(--shadow-hard-lg);
   overflow-x: auto;
+  overflow-y: hidden;
   margin-bottom: 1rem;
 }
 
-/* Weekly Grid Layout */
 .weekly-grid-wrapper {
   min-width: 850px;
+  overflow: hidden;
 }
 
 .grid-header-row {
@@ -458,8 +458,8 @@ body {
 }
 
 .block-item:hover {
-  transform: scale(1.01);
   z-index: 20;
+  box-shadow: 3px 3px 0px var(--border-main);
 }
 
 .block-item.pending-delete {
