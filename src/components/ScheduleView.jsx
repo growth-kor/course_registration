@@ -167,9 +167,9 @@ export function ScheduleView() {
                 }}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap', overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap', minWidth: 0 }}>
                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid var(--border-main)', backgroundColor: isOwner ? 'var(--border-main)' : 'transparent', flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{memberInfo.name}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{memberInfo.name}</span>
                     {isOwner && <span style={{ fontSize: '0.65rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0 0.3rem', fontWeight: 'bold', flexShrink: 0, whiteSpace: 'nowrap' }}>방장</span>}
                     {mId === user.uid && <span style={{ fontSize: '0.65rem', backgroundColor: 'var(--text-main)', color: 'white', border: '1.5px solid var(--border-main)', padding: '0 0.3rem', fontWeight: 'bold', flexShrink: 0, whiteSpace: 'nowrap' }}>나</span>}
                   </div>

@@ -103,6 +103,7 @@ export function RoomModals({
   const [settingsDesc, setSettingsDesc] = useState('');
   const [settingsImageFile, setSettingsImageFile] = useState(null);
   const [settingsImagePreview, setSettingsImagePreview] = useState(null);
+  const [settingsImageUrl, setSettingsImageUrl] = useState('');
   const [isUploadingRoomImage, setIsUploadingRoomImage] = useState(false);
 
   // Initialize form state when modal opens
@@ -111,6 +112,7 @@ export function RoomModals({
       setSettingsName(activeRoom.name || '');
       setSettingsDesc(activeRoom.description || '');
       setSettingsImageFile(null);
+      setSettingsImageUrl(activeRoom.themeImageUrl || '');
       setSettingsImagePreview(activeRoom.themeImageUrl || null);
     }
   }, [showRoomSettingsModal, activeRoom?.id]);
@@ -119,6 +121,7 @@ export function RoomModals({
     const file = e.target.files?.[0];
     if (!file) return;
     setSettingsImageFile(file);
+    setSettingsImageUrl(''); // clear URL when file is chosen
     const previewUrl = URL.createObjectURL(file);
     setSettingsImagePreview(previewUrl);
   };
@@ -126,7 +129,7 @@ export function RoomModals({
   const handleSaveRoomSettings = async () => {
     if (!settingsName.trim()) return;
     setIsUploadingRoomImage(true);
-    let themeImageUrl = activeRoom.themeImageUrl || '';
+    let themeImageUrl = settingsImageUrl.trim() || activeRoom.themeImageUrl || '';
     
     if (settingsImageFile) {
       try {
@@ -135,7 +138,8 @@ export function RoomModals({
         if (uploadedUrl) themeImageUrl = uploadedUrl;
       } catch (err) {
         console.error('Image upload error:', err);
-        alert('이미지 업로드에 실패했습니다. URL을 대신 사용합니다.');
+        alert('이미지 업로드에 실패했습니다. URL이 있으면 URL을 사용합니다.');
+        themeImageUrl = settingsImageUrl.trim() || activeRoom.themeImageUrl || '';
       }
     }
 
@@ -296,27 +300,29 @@ export function RoomModals({
               <div>
                 <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>
                   방 대표 이미지
-                  <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>자동 압축됨 (최대 150KB)</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>파일 업로드 시 자동 압축 (최대 150KB)</span>
                 </label>
+                {/* Preview */}
                 {settingsImagePreview && (
                   <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.75rem' }}>
                     <img 
                       src={settingsImagePreview} 
                       alt="preview"
-                      style={{ width: '80px', height: '80px', objectFit: 'cover', border: '2px solid var(--border-main)', borderRadius: '50%' }}
+                      style={{ width: '72px', height: '72px', objectFit: 'cover', border: '2px solid var(--border-main)', borderRadius: '50%' }}
                     />
                     <button
                       type="button"
-                      onClick={() => { setSettingsImagePreview(null); setSettingsImageFile(null); }}
+                      onClick={() => { setSettingsImagePreview(null); setSettingsImageFile(null); setSettingsImageUrl(''); }}
                       style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--text-main)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
                     >
                       <X size={12} />
                     </button>
                   </div>
                 )}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.6rem 1rem', border: '2px dashed var(--border-main)', fontWeight: 'bold', backgroundColor: '#f8fafc' }}>
-                  <Upload size={16} />
-                  {settingsImageFile ? settingsImageFile.name : '이미지 파일 선택 (JPG, PNG, WEBP)'}
+                {/* File Upload */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.55rem 1rem', border: '2px dashed var(--border-main)', fontWeight: 'bold', backgroundColor: '#f8fafc', marginBottom: '0.5rem' }}>
+                  <Upload size={15} />
+                  {settingsImageFile ? settingsImageFile.name : '파일 선택 (JPG, PNG, WEBP)'}
                   <input 
                     type="file" 
                     accept="image/*"
@@ -324,6 +330,26 @@ export function RoomModals({
                     onChange={handleRoomImageChange}
                   />
                 </label>
+                {/* URL Input */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>또는 URL</span>
+                  <input
+                    type="text"
+                    className="input-field"
+                    value={settingsImageUrl}
+                    onChange={e => {
+                      setSettingsImageUrl(e.target.value);
+                      setSettingsImageFile(null); // clear file when URL is typed
+                      if (e.target.value.trim()) {
+                        setSettingsImagePreview(e.target.value.trim());
+                      } else {
+                        setSettingsImagePreview(null);
+                      }
+                    }}
+                    placeholder="https://... 이미지 주소 직접 입력"
+                    style={{ flex: 1, fontSize: '0.85rem', padding: '0.45rem 0.75rem' }}
+                  />
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border-main)' }}>
                 <span style={{ fontWeight: 'bold' }}>방 삭제</span>
