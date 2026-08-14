@@ -59,7 +59,6 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity;
 }
 
 body {
@@ -90,7 +89,6 @@ body {
   box-shadow: var(--shadow-hard);
   padding: 1.25rem;
   margin-bottom: 1rem;
-  scroll-snap-align: start;
 }
 
 .header-top-row {
@@ -319,8 +317,6 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   margin-bottom: 1rem;
-  scroll-snap-align: start;
-  scroll-margin-top: 1rem;
 }
 
 .weekly-grid-wrapper {

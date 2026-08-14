@@ -110,6 +110,58 @@ export default function App() {
   const [pendingDeleteBlockIds, setPendingDeleteBlockIds] = useState([]);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const mainGridRef = React.useRef(null);
+  const isSnappingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    // Reset scroll to top on refresh
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+
+    const handleWheel = (e) => {
+      if (activeTab !== 'personal' || isSnappingRef.current || isFullscreen) return;
+
+      const gridEl = mainGridRef.current;
+      if (!gridEl) return;
+
+      const gridRect = gridEl.getBoundingClientRect();
+      const currentScroll = window.scrollY;
+
+      // When at the top (seeing header) and scrolling down:
+      if (e.deltaY > 15 && currentScroll < 80 && gridRect.top > 0) {
+        isSnappingRef.current = true;
+        const targetY = currentScroll + gridRect.top - 16; // 16px clean gap from viewport top
+        window.scrollTo({
+          top: targetY,
+          behavior: 'smooth'
+        });
+        setTimeout(() => {
+          isSnappingRef.current = false;
+        }, 600);
+      }
+      // When at the timetable top and scrolling up:
+      else if (e.deltaY < -15 && currentScroll <= gridRect.top + currentScroll + 30 && currentScroll > 10) {
+        if (gridRect.top >= 0) {
+          isSnappingRef.current = true;
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+          setTimeout(() => {
+            isSnappingRef.current = false;
+          }, 600);
+        }
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [activeTab, isFullscreen]);
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
@@ -296,7 +348,7 @@ export default function App() {
 
       {/* Main Grid View */}
       {activeTab === 'personal' ? (
-        <main className="main-content-area">
+        <main className="main-content-area" ref={mainGridRef}>
           <WeeklyGrid
             blocks={blocks}
             showWeekend={settings.showWeekend}
