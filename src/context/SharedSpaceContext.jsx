@@ -58,55 +58,55 @@ export function SharedSpaceProvider({
     }
   }, [plans]);
 
-  useEffect(() => {
-    let isActive = true;
+  const loadRoomsCounter = React.useRef(0);
 
-    const loadRooms = async () => {
-      const storedRoomId = sessionStorage.getItem('activeRoomId');
-      if (!user) {
-        if (storedRoomId) {
-          // Preview mode room fetch
-          const rData = await fetchRoomById(storedRoomId);
-          if (isActive && rData) {
-            setActiveRoom({ ...rData, isPreview: true });
-          }
-        }
-        if (isActive) {
-          setRooms([]);
-          setLoading(false);
-        }
-        return;
-      }
-      
-      if (isActive) setLoading(true);
-      const userRooms = await fetchRoomsForUser(user.uid);
-      
-      if (!isActive) return;
-      setRooms(userRooms);
-      
+  const loadRooms = async () => {
+    loadRoomsCounter.current += 1;
+    const currentCall = loadRoomsCounter.current;
+
+    const storedRoomId = sessionStorage.getItem('activeRoomId');
+    if (!user) {
       if (storedRoomId) {
-        const matchedRoom = userRooms.find(r => r.id === storedRoomId);
-        if (matchedRoom) {
-          setActiveRoom(matchedRoom);
-        } else {
-          const rData = await fetchRoomById(storedRoomId);
-          if (isActive) {
-            if (rData) {
-              setActiveRoom({ ...rData, isPreview: true });
-            } else {
-              setActiveRoom(null);
-            }
+        // Preview mode room fetch
+        const rData = await fetchRoomById(storedRoomId);
+        if (currentCall === loadRoomsCounter.current && rData) {
+          setActiveRoom({ ...rData, isPreview: true });
+        }
+      }
+      if (currentCall === loadRoomsCounter.current) {
+        setRooms([]);
+        setLoading(false);
+      }
+      return;
+    }
+    
+    setLoading(true);
+    const userRooms = await fetchRoomsForUser(user.uid);
+    
+    if (currentCall !== loadRoomsCounter.current) return;
+    
+    setRooms(userRooms);
+    
+    if (storedRoomId) {
+      const matchedRoom = userRooms.find(r => r.id === storedRoomId);
+      if (matchedRoom) {
+        setActiveRoom(matchedRoom);
+      } else {
+        const rData = await fetchRoomById(storedRoomId);
+        if (currentCall === loadRoomsCounter.current) {
+          if (rData) {
+            setActiveRoom({ ...rData, isPreview: true });
+          } else {
+            setActiveRoom(null);
           }
         }
       }
-      if (isActive) setLoading(false);
-    };
+    }
+    if (currentCall === loadRoomsCounter.current) setLoading(false);
+  };
 
+  useEffect(() => {
     loadRooms();
-
-    return () => {
-      isActive = false;
-    };
   }, [user]);
 
   useEffect(() => {
