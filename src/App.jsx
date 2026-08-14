@@ -352,12 +352,12 @@ export default function App() {
         onUpdateKeys={updateFirebaseKeys}
         onGoogleLogin={handleGoogleLogin}
         onLogout={handleLogout}
-        onUpdateProfile={async (newName) => {
-          const success = await updateUserProfile(user, newName);
+        onUpdateProfile={async (newName, newStatus) => {
+          const success = await updateUserProfile(user, newName, newStatus);
           if (success) {
-            alert('이름이 성공적으로 변경되었습니다. 새로고침 시 적용될 수 있습니다.');
+            // Updated successfully
           } else {
-            alert('이름 변경에 실패했습니다.');
+            alert('프로필 저장에 실패했습니다.');
           }
         }}
       />

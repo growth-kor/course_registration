@@ -35,7 +35,7 @@ export function AuthModal({
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '350px' }}>
         <div className="modal-header">
           <h2 className="modal-title">
-            <Cloud size={20} /> 로그인
+            <Cloud size={20} /> 프로필 및 계정 설정
           </h2>
           <button className="btn btn-sm" onClick={onClose}>
             <X size={16} />
@@ -45,65 +45,64 @@ export function AuthModal({
         <div className="auth-modal-body">
           <div className="auth-status-card">
             {user ? (
-              <div className="status-box success" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={32} className="icon-success" />
-                  <div style={{ flex: 1, width: '100%' }}>
-                    {isEditingProfile ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center', width: '100%' }}>
-                        <input 
-                          type="text" 
-                          value={newName} 
-                          onChange={e => setNewName(e.target.value)} 
-                          className="input-field" 
-                          placeholder="이름"
-                          style={{ padding: '0.4rem', fontSize: '0.9rem', width: '100%' }}
-                        />
-                        <input 
-                          type="text" 
-                          value={newStatus} 
-                          onChange={e => setNewStatus(e.target.value)} 
-                          className="input-field"
-                          placeholder="상태 메시지 (선택)"
-                          style={{ padding: '0.4rem', fontSize: '0.9rem', width: '100%' }}
-                        />
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <button 
-                            className="btn btn-sm btn-primary" 
-                            onClick={async () => {
-                              const nameToUpdate = newName.trim();
-                              const statusToUpdate = newStatus.trim();
-                              if (nameToUpdate !== user.displayName || statusToUpdate !== currentStatus) {
-                                await onUpdateProfile(nameToUpdate, statusToUpdate);
-                                setCurrentStatus(statusToUpdate);
-                              }
-                              setIsEditingProfile(false);
-                            }}
-                          >
-                            저장
-                          </button>
-                          <button className="btn btn-sm" onClick={() => setIsEditingProfile(false)}>취소</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{user.displayName || user.email}</h4>
-                          <button className="btn btn-sm" onClick={() => setIsEditingProfile(true)} style={{ padding: '0.1rem 0.4rem', fontSize: '0.8rem' }}>수정</button>
-                        </div>
-                        {currentStatus && (
-                          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', backgroundColor: '#f1f5f9', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border-grid-dark)' }}>
-                            "{currentStatus}"
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <p className="sub-desc" style={{ margin: 0, marginTop: '1rem', fontWeight: 'bold' }}>클라우드 동기화 됨</p>
+              <div className="status-box success" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1.5px solid var(--border-main)', paddingBottom: '0.75rem', width: '100%' }}>
+                  <CheckCircle2 size={24} className="icon-success" />
+                  <div style={{ overflow: 'hidden' }}>
+                    <div style={{ fontWeight: '900', fontSize: '1rem' }}>{user.displayName || '이름 없음'}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>{user.email}</div>
                   </div>
                 </div>
-                <button className="btn btn-sm btn-danger" onClick={onLogout} style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center' }}>
-                  <LogOut size={14} /> 로그아웃
-                </button>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', textAlign: 'left' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '900', display: 'block', marginBottom: '0.3rem' }}>이름 (닉네임)</label>
+                    <input 
+                      type="text" 
+                      value={newName} 
+                      onChange={e => setNewName(e.target.value)} 
+                      className="input-field" 
+                      placeholder="이름을 입력하세요"
+                      style={{ width: '100%', padding: '0.5rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: '900' }}>상태 메시지 (최대 10자)</label>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{newStatus.length}/10</span>
+                    </div>
+                    <input 
+                      type="text" 
+                      maxLength={10}
+                      value={newStatus} 
+                      onChange={e => setNewStatus(e.target.value)} 
+                      className="input-field"
+                      placeholder="10자 내 한 줄 메시지"
+                      style={{ width: '100%', padding: '0.5rem' }}
+                    />
+                  </div>
+
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={async () => {
+                      const nameToUpdate = newName.trim();
+                      const statusToUpdate = newStatus.trim();
+                      await onUpdateProfile(nameToUpdate, statusToUpdate);
+                      setCurrentStatus(statusToUpdate);
+                      alert("프로필이 성공적으로 저장되었습니다!");
+                    }}
+                    style={{ width: '100%', justifyContent: 'center', fontWeight: '900', marginTop: '0.25rem' }}
+                  >
+                    프로필 저장
+                  </button>
+                </div>
+
+                <div style={{ borderTop: '1.5px solid var(--border-main)', paddingTop: '0.75rem', width: '100%' }}>
+                  <button className="btn btn-sm btn-danger" onClick={onLogout} style={{ width: '100%', justifyContent: 'center' }}>
+                    <LogOut size={14} /> 로그아웃
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="status-box" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>

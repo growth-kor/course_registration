@@ -74,42 +74,38 @@ function SharedSpaceContent() {
       {!activeRoom ? (
         // DASHBOARD VIEW
         <div className="dashboard-view" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2rem 3rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)' }}>
-            <h1 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Users size={32} /> 공유 시간표 대시보드
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 2rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)', flexWrap: 'wrap', gap: '1rem' }}>
+            <h1 style={{ margin: 0, fontWeight: '900', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Users size={28} /> 공유 시간표 대시보드
             </h1>
-          </div>
-          
-          <div style={{ padding: '2rem 3rem', display: 'flex', flexDirection: 'column', gap: '2rem', flex: 1, overflowY: 'auto' }}>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', borderBottom: '2px solid var(--border-main)', paddingBottom: '1.5rem' }}>
+
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <button 
-                className={`btn ${sidebarTab === 'my_rooms' ? 'btn-primary' : ''}`}
+                className="btn"
                 onClick={() => setSidebarTab('my_rooms')}
                 style={{ 
-                  padding: '0.75rem 1.5rem', 
-                  fontWeight: '900',
-                  fontSize: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
+                  padding: '0.45rem 0.9rem', 
+                  fontWeight: 'bold',
+                  backgroundColor: sidebarTab === 'my_rooms' ? '#f1f5f9' : 'white',
+                  boxShadow: sidebarTab === 'my_rooms' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: sidebarTab === 'my_rooms' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <Users size={20} /> 소속된 방
+                <Users size={16} /> 소속된 방
               </button>
               
               <button 
-                className={`btn ${sidebarTab === 'explore' ? 'btn-primary' : ''}`}
+                className="btn"
                 onClick={() => setSidebarTab('explore')}
                 style={{ 
-                  padding: '0.75rem 1.5rem', 
-                  fontWeight: '900',
-                  fontSize: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
+                  padding: '0.45rem 0.9rem', 
+                  fontWeight: 'bold',
+                  backgroundColor: sidebarTab === 'explore' ? '#f1f5f9' : 'white',
+                  boxShadow: sidebarTab === 'explore' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: sidebarTab === 'explore' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <Globe size={20} /> 탐색
+                <Globe size={16} /> 탐색
               </button>
 
               <button 
@@ -119,14 +115,14 @@ function SharedSpaceContent() {
                   setShowCreateModal(true);
                 }}
                 style={{ 
-                  padding: '0.75rem 1.5rem', 
-                  fontWeight: '900', 
+                  padding: '0.45rem 0.9rem', 
+                  fontWeight: 'bold', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: '0.5rem' 
+                  gap: '0.4rem' 
                 }}
               >
-                <Plus size={20} /> 새 공유방 만들기
+                <Plus size={16} /> 새 공유방 만들기
               </button>
 
               <button 
@@ -136,16 +132,19 @@ function SharedSpaceContent() {
                   setShowJoinModal(true);
                 }}
                 style={{ 
-                  padding: '0.75rem 1.5rem', 
-                  fontWeight: '900', 
+                  padding: '0.45rem 0.9rem', 
+                  fontWeight: 'bold', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: '0.5rem' 
+                  gap: '0.4rem' 
                 }}
               >
-                <Key size={20} /> 코드로 참여하기
+                <Key size={16} /> 코드로 참여하기
               </button>
             </div>
+          </div>
+          
+          <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem', flex: 1, overflowY: 'auto' }}>
 
             <div style={{ flex: 1 }}>
               {sidebarTab === 'my_rooms' ? (
