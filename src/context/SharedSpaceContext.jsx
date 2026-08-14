@@ -58,42 +58,55 @@ export function SharedSpaceProvider({
     }
   }, [plans]);
 
-  const loadRooms = async () => {
-    const storedRoomId = sessionStorage.getItem('activeRoomId');
-    if (!user) {
-      setRooms([]);
-      if (storedRoomId) {
-        // Preview mode room fetch
-        const rData = await fetchRoomById(storedRoomId);
-        if (rData) {
-          setActiveRoom({ ...rData, isPreview: true });
-        }
-      }
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const userRooms = await fetchRoomsForUser(user.uid);
-    setRooms(userRooms);
-    
-    if (storedRoomId) {
-      const matchedRoom = userRooms.find(r => r.id === storedRoomId);
-      if (matchedRoom) {
-        setActiveRoom(matchedRoom);
-      } else {
-        const rData = await fetchRoomById(storedRoomId);
-        if (rData) {
-          setActiveRoom({ ...rData, isPreview: true });
-        } else {
-          setActiveRoom(null);
-        }
-      }
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    let isActive = true;
+
+    const loadRooms = async () => {
+      const storedRoomId = sessionStorage.getItem('activeRoomId');
+      if (!user) {
+        if (storedRoomId) {
+          // Preview mode room fetch
+          const rData = await fetchRoomById(storedRoomId);
+          if (isActive && rData) {
+            setActiveRoom({ ...rData, isPreview: true });
+          }
+        }
+        if (isActive) {
+          setRooms([]);
+          setLoading(false);
+        }
+        return;
+      }
+      
+      if (isActive) setLoading(true);
+      const userRooms = await fetchRoomsForUser(user.uid);
+      
+      if (!isActive) return;
+      setRooms(userRooms);
+      
+      if (storedRoomId) {
+        const matchedRoom = userRooms.find(r => r.id === storedRoomId);
+        if (matchedRoom) {
+          setActiveRoom(matchedRoom);
+        } else {
+          const rData = await fetchRoomById(storedRoomId);
+          if (isActive) {
+            if (rData) {
+              setActiveRoom({ ...rData, isPreview: true });
+            } else {
+              setActiveRoom(null);
+            }
+          }
+        }
+      }
+      if (isActive) setLoading(false);
+    };
+
     loadRooms();
+
+    return () => {
+      isActive = false;
+    };
   }, [user]);
 
   useEffect(() => {
