@@ -28,7 +28,7 @@ export function Header({
   isDarkMode,
   onToggleDarkMode
 }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const safeCategories = categories || {};
   const stats = calculateCategoryStats(blocks, safeCategories);
 
@@ -178,11 +178,16 @@ export function Header({
 
         {/* Quick Stats Bar */}
         <div className="quick-stats-bar">
-          {Object.values(safeCategories).filter(Boolean).map(cat => (
-            <span key={cat.id} className="stat-pill">
-              {cat.label} <strong>{stats[cat.id]}h</strong>
-            </span>
-          ))}
+          {Object.values(safeCategories).filter(Boolean).map(cat => {
+            const label = (lang === 'en' && t(`cat_${cat.id}`)) ? t(`cat_${cat.id}`) : cat.label;
+            return (
+              <span key={cat.id} className="stat-pill" title={`${label}: ${stats[cat.id]}h`}>
+                {cat.icon && <span className="stat-pill-icon">{cat.icon}</span>}
+                <span className="stat-pill-label">{label}</span>
+                <span className="stat-pill-badge">{stats[cat.id]}h</span>
+              </span>
+            );
+          })}
         </div>
       </div>
       )}
