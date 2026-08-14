@@ -33,8 +33,19 @@ export function Header({
   const stats = calculateCategoryStats(blocks, safeCategories);
 
   return (
-    <header className="header-container">
-      <div className="header-top-row">
+    <header 
+      className="header-container"
+      style={{
+        padding: activeTab === 'shared' ? '0.65rem 1.25rem' : '1.25rem',
+        marginBottom: activeTab === 'shared' ? '0.6rem' : '1rem'
+      }}
+    >
+      <div 
+        className="header-top-row"
+        style={{
+          marginBottom: activeTab === 'shared' ? '0' : '1rem'
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
           <div className="brand-section" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <h1 className="brand-title" style={{ margin: 0 }}>{t('brand_title')}</h1>
