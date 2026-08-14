@@ -134,7 +134,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
       setLoadingSchedule(false);
     }
     loadMemberSchedule();
-  }, [activeMemberId, activeRoom, user.uid]);
+  }, [activeMemberId, activeRoom, user?.uid]);
 
   const loadPosts = async () => {
     if (!activeRoom) return;
@@ -414,15 +414,15 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
             )}
           </div>
           
-          <div style={{ padding: '2rem 3rem', display: 'flex', gap: '2rem', flex: 1, overflowY: 'auto' }}>
-            {/* Left Column: Navigation Tabs & Create/Join */}
-            <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+          <div style={{ padding: '2rem 3rem', display: 'flex', flexDirection: 'column', gap: '2rem', flex: 1, overflowY: 'auto' }}>
+            {/* Top Navigation Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
                 <button 
                   className={`btn ${sidebarTab === 'my_rooms' ? 'btn-primary' : ''}`}
                   onClick={() => setSidebarTab('my_rooms')}
                   style={{ 
-                    padding: '0.75rem 1rem', 
+                    padding: '0.75rem 1.5rem', 
                     border: '2px solid var(--border-main)',
                     background: sidebarTab === 'my_rooms' ? 'var(--color-primary)' : 'white',
                     color: 'var(--text-main)',
@@ -432,10 +432,9 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    boxShadow: sidebarTab === 'my_rooms' ? 'none' : 'var(--shadow-hard)',
+                    boxShadow: sidebarTab === 'my_rooms' ? 'none' : 'var(--shadow-hard-sm)',
                     transform: sidebarTab === 'my_rooms' ? 'translate(2px, 2px)' : 'none',
                     transition: 'all 0.1s ease',
-                    textAlign: 'left'
                   }}
                 >
                   <Users size={20} /> 소속된 방
@@ -444,7 +443,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                   className={`btn ${sidebarTab === 'explore' ? 'btn-primary' : ''}`}
                   onClick={() => setSidebarTab('explore')}
                   style={{ 
-                    padding: '0.75rem 1rem', 
+                    padding: '0.75rem 1.5rem', 
                     border: '2px solid var(--border-main)',
                     background: sidebarTab === 'explore' ? 'var(--color-primary)' : 'white',
                     color: 'var(--text-main)',
@@ -454,27 +453,34 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
-                    boxShadow: sidebarTab === 'explore' ? 'none' : 'var(--shadow-hard)',
+                    boxShadow: sidebarTab === 'explore' ? 'none' : 'var(--shadow-hard-sm)',
                     transform: sidebarTab === 'explore' ? 'translate(2px, 2px)' : 'none',
                     transition: 'all 0.1s ease',
-                    textAlign: 'left'
                   }}
                 >
                   <Search size={20} /> 공유방 탐색
                 </button>
               </div>
 
-              <div style={{ padding: '1.5rem', backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <button className="btn btn-primary" onClick={() => setShowCreateModal(true)} style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => setShowCreateModal(true)} 
+                  style={{ padding: '0.75rem 1.5rem', fontWeight: 'bold' }}
+                >
                   <Plus size={18} /> 새 방 만들기
                 </button>
-                <button className="btn" onClick={() => setShowJoinModal(true)} style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}>
+                <button 
+                  className="btn" 
+                  onClick={() => setShowJoinModal(true)} 
+                  style={{ padding: '0.75rem 1.5rem', backgroundColor: 'white', fontWeight: 'bold' }}
+                >
                   <Key size={18} /> 코드로 입장
                 </button>
               </div>
             </div>
 
-            {/* Right Column: Grid of Rooms */}
+            {/* Bottom Content: Grid of Rooms */}
             <div style={{ flex: 1 }}>
               {sidebarTab === 'my_rooms' ? (
                 loading ? (
