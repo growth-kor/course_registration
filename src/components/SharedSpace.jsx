@@ -68,49 +68,47 @@ function SharedSpaceContent() {
         // DASHBOARD VIEW
         <div className="dashboard-view" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 2rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
-              <h1 style={{ margin: 0, fontWeight: '900', fontSize: '1.45rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Users size={26} /> {t('dashboard_title')}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, fontWeight: '900', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Users size={28} /> {t('dashboard_title')}
               </h1>
               
-              <div style={{ display: 'flex', gap: '0.4rem', backgroundColor: '#f1f5f9', padding: '0.3rem', border: '2px solid var(--border-main)' }}>
-                <button 
-                  className="btn"
-                  onClick={() => setSidebarTab('my_rooms')}
-                  style={{ 
-                    padding: '0.35rem 0.8rem', 
-                    fontWeight: '900',
-                    fontSize: '0.88rem',
-                    backgroundColor: sidebarTab === 'my_rooms' ? 'var(--text-main)' : 'transparent',
-                    color: sidebarTab === 'my_rooms' ? 'white' : 'var(--text-main)',
-                    border: 'none',
-                    boxShadow: 'none',
-                    transform: 'none'
-                  }}
-                >
-                  <Users size={15} style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} /> {t('my_rooms')}
-                </button>
-                
-                <button 
-                  className="btn"
-                  onClick={() => setSidebarTab('explore')}
-                  style={{ 
-                    padding: '0.35rem 0.8rem', 
-                    fontWeight: '900',
-                    fontSize: '0.88rem',
-                    backgroundColor: sidebarTab === 'explore' ? 'var(--text-main)' : 'transparent',
-                    color: sidebarTab === 'explore' ? 'white' : 'var(--text-main)',
-                    border: 'none',
-                    boxShadow: 'none',
-                    transform: 'none'
-                  }}
-                >
-                  <Globe size={15} style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} /> {t('explore')}
-                </button>
-              </div>
+              <button 
+                className="btn"
+                onClick={() => setSidebarTab(sidebarTab === 'explore' ? 'my_rooms' : 'explore')}
+                style={{ 
+                  padding: '0.45rem 0.9rem', 
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  backgroundColor: sidebarTab === 'explore' ? '#f1f5f9' : 'white',
+                  boxShadow: sidebarTab === 'explore' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: sidebarTab === 'explore' ? 'translate(2px, 2px)' : 'none' 
+                }}
+              >
+                <Globe size={16} /> {t('explore')}
+              </button>
             </div>
 
             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button 
+                className="btn"
+                onClick={() => setSidebarTab('my_rooms')}
+                style={{ 
+                  padding: '0.45rem 0.9rem', 
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  backgroundColor: sidebarTab === 'my_rooms' ? '#f1f5f9' : 'white',
+                  boxShadow: sidebarTab === 'my_rooms' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: sidebarTab === 'my_rooms' ? 'translate(2px, 2px)' : 'none' 
+                }}
+              >
+                <Users size={16} /> {t('my_rooms')}
+              </button>
+
               <button 
                 className="btn btn-primary" 
                 onClick={() => {
