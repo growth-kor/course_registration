@@ -296,9 +296,17 @@ function SharedSpaceContent() {
                             </p>
                             <button 
                               className="btn btn-primary"
+                              onClick={(e) => {
+                                if (!isJoined) {
+                                  e.stopPropagation();
+                                  setJoinCode(room.inviteCode);
+                                  setSharedPlanIdToJoin(plans && plans.length > 0 ? plans[0].id : '');
+                                  setShowJoinModal(true);
+                                }
+                              }}
                               style={{ width: '100%', fontWeight: 'bold' }}
                             >
-                              {isJoined ? '방으로 이동' : '둘러보기 / 이동'}
+                              {isJoined ? '방으로 이동' : '방 가입하기'}
                             </button>
                           </div>
                         );
