@@ -161,48 +161,53 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  overflow-x: auto;
 }
 
 .quick-stats-bar {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .stat-pill {
   font-family: var(--font-mono);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  padding: 0.45rem 0.8rem;
+  padding: 0.35rem 0.6rem;
   border: 2px solid var(--border-main);
   background-color: #ffffff;
   color: var(--text-main);
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   box-shadow: 2px 2px 0px var(--border-main);
   line-height: 1.2;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .stat-pill-icon {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   line-height: 1;
 }
 
 .stat-pill-label {
   font-weight: 900;
   color: var(--text-main);
-  font-size: 0.92rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
 }
 
 .stat-pill-badge {
   background-color: var(--text-main);
   color: #ffffff;
-  padding: 0.15rem 0.45rem;
-  font-size: 0.88rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: -0.01em;
   border-radius: 0px;
@@ -221,16 +226,17 @@ body {
 .control-buttons {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 /* Brutalist Buttons */
 .btn {
   font-family: var(--font-mono);
   font-weight: 800;
-  font-size: 0.875rem;
-  padding: 0.5rem 0.95rem;
+  font-size: 0.825rem;
+  padding: 0.42rem 0.75rem;
   background-color: #ffffff;
   color: var(--text-main);
   border: 2px solid var(--border-main);
@@ -238,9 +244,10 @@ body {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   transition: transform 0.05s ease, box-shadow 0.05s ease;
   user-select: none;
+  white-space: nowrap;
 }
 
 .btn:hover {
