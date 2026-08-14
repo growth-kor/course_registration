@@ -117,7 +117,7 @@ export function ScheduleView() {
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-      <div style={{ width: '250px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
+      <div style={{ width: '270px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)', flexShrink: 0 }}>
         <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', color: 'var(--text-main)' }}>
           <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
             <Users size={18} /> 참여 멤버 ({activeRoom.memberIds?.length || 0})
@@ -154,7 +154,7 @@ export function ScheduleView() {
                 key={mId}
                 onClick={() => setActiveMemberId(mId)}
                 style={{
-                  padding: '1rem',
+                  padding: '0.9rem 1rem',
                   borderBottom: '2px solid var(--border-main)',
                   background: activeMemberId === mId ? 'white' : 'transparent',
                   cursor: 'pointer',
@@ -163,18 +163,47 @@ export function ScheduleView() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   boxShadow: activeMemberId === mId ? 'inset 4px 0 0 var(--text-main)' : 'none',
-                  transition: 'background-color 0.1s ease'
+                  transition: 'background-color 0.1s ease',
+                  overflow: 'hidden'
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap', minWidth: 0 }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid var(--border-main)', backgroundColor: isOwner ? 'var(--border-main)' : 'transparent', flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1 }}>{memberInfo.name}</span>
-                    {isOwner && <span style={{ fontSize: '0.65rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0 0.3rem', fontWeight: 'bold', flexShrink: 0, whiteSpace: 'nowrap' }}>방장</span>}
-                    {mId === user.uid && <span style={{ fontSize: '0.65rem', backgroundColor: 'var(--text-main)', color: 'white', border: '1.5px solid var(--border-main)', padding: '0 0.3rem', fontWeight: 'bold', flexShrink: 0, whiteSpace: 'nowrap' }}>나</span>}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', width: '100%', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid var(--border-main)', backgroundColor: isOwner ? 'var(--border-main)' : 'transparent', flexShrink: 0 }} />
+                      <span 
+                        title={memberInfo.name}
+                        style={{ 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis', 
+                          whiteSpace: 'nowrap', 
+                          fontSize: '0.92rem', 
+                          fontWeight: '700', 
+                          letterSpacing: '-0.01em',
+                          color: 'var(--text-main)'
+                        }}
+                      >
+                        {memberInfo.name}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
+                      {isOwner && (
+                        <span style={{ fontSize: '0.68rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.35rem', fontWeight: 'bold' }}>
+                          방장
+                        </span>
+                      )}
+                      {mId === user.uid && (
+                        <span style={{ fontSize: '0.68rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.05rem 0.35rem', fontWeight: 'bold' }}>
+                          나
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {memberInfo.statusMessage && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-main)', marginLeft: '1.1rem' }}>
+                    <div 
+                      title={memberInfo.statusMessage}
+                      style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', marginLeft: '1.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
                       "{memberInfo.statusMessage}"
                     </div>
                   )}

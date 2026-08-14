@@ -1,7 +1,7 @@
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, BookOpen } from 'lucide-react';
 
-export function FooterCard() {
+export function FooterCard({ onOpenGuide }) {
   return (
     <footer className="footer-card-container">
       <div className="footer-card-left">
@@ -37,12 +37,23 @@ export function FooterCard() {
         </div>
       </div>
 
-      <div className="footer-card-right">
+      <div className="footer-card-right" style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <button 
+          type="button"
+          onClick={onOpenGuide}
+          className="btn footer-action-btn"
+          style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+        >
+          <BookOpen size={15} />
+          <span>플래너 사용 설명서</span>
+        </button>
+
         <a 
           href="https://github.com/growth-kor" 
           target="_blank" 
           rel="noopener noreferrer"
           className="btn footer-action-btn"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
         >
           <span>공식 페이지 / GitHub</span>
           <ExternalLink size={15} />

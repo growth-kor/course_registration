@@ -8,6 +8,7 @@ import { TimeAnalyticsModal } from './components/TimeAnalyticsModal';
 import { BackupModal } from './components/BackupModal';
 import { SharedSpace } from './components/SharedSpace';
 import { FooterCard } from './components/FooterCard';
+import { UserGuideModal } from './components/UserGuideModal';
 import { Minimize } from 'lucide-react';
 import { updateUserProfile } from './firebase/config';
 
@@ -100,6 +101,7 @@ export default function App() {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [pendingDeleteBlockIds, setPendingDeleteBlockIds] = useState([]);
@@ -319,7 +321,7 @@ export default function App() {
       )}
 
       {/* Digital Business Card Footer */}
-      {!isFullscreen && <FooterCard />}
+      {!isFullscreen && <FooterCard onOpenGuide={() => setIsGuideOpen(true)} />}
 
       <BlockModal
         isOpen={isAddModalOpen}
@@ -381,6 +383,12 @@ export default function App() {
         blocks={blocks}
         onImport={importBlocks}
         currentPlanName={plans.find(p => p.id === currentPlanId)?.name}
+      />
+
+      {/* User Guide Modal */}
+      <UserGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
       />
       </div>
     </ErrorBoundary>
