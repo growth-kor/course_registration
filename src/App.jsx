@@ -7,6 +7,7 @@ import { AuthModal } from './components/AuthModal';
 import { TimeAnalyticsModal } from './components/TimeAnalyticsModal';
 import { BackupModal } from './components/BackupModal';
 import { SharedSpace } from './components/SharedSpace';
+import { FooterCard } from './components/FooterCard';
 import { Minimize } from 'lucide-react';
 import { updateUserProfile } from './firebase/config';
 
@@ -316,6 +317,9 @@ export default function App() {
           />
         </main>
       )}
+
+      {/* Digital Business Card Footer */}
+      {!isFullscreen && <FooterCard />}
 
       <BlockModal
         isOpen={isAddModalOpen}

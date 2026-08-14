@@ -53,41 +53,7 @@ export function ScheduleView() {
     }
   };
 
-  // Overlay all members' shared schedules
-  const generateHeatmap = useMemo(() => {
-    if (activeMemberId !== '__all__' || !activeRoom) return [];
 
-    const allBlocks = [];
-    (activeRoom.memberIds || []).forEach(mId => {
-      const memberInfo = activeRoom.memberDetails?.[mId];
-      if (!memberInfo) return;
-      
-      const memberPlan = memberInfo.schedule?.plans?.find(p => p.id === memberInfo.sharedPlanId) || memberInfo.schedule?.plans?.[0];
-      const memberCategories = memberInfo.schedule?.categories || {};
-      
-      if (!memberPlan) return;
-
-      (memberPlan.blocks || []).forEach(block => {
-        const cat = memberCategories[block.category];
-        if (cat && cat.isShared === false) return; // skip private blocks
-
-        (block.timeSlots || []).forEach(ts => {
-          allBlocks.push({
-            id: `hm_${mId}_${block.id}_${ts.id}`,
-            title: `[${memberInfo.name}] ${block.title}`,
-            color: '#ffffff',
-            timeSlots: [ts],
-            category: block.category,
-            location: block.location,
-            memo: block.memo,
-            isHeatmap: false
-          });
-        });
-      });
-    });
-
-    return allBlocks;
-  }, [activeMemberId, activeRoom]);
 
   const renderMemberSchedule = () => {
     if (activeMemberId !== '__all__' && loadingSchedule) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900', fontSize: '1.2rem' }}>[ 일정 불러오는 중... ]</div>;
@@ -95,7 +61,7 @@ export function ScheduleView() {
     let blocksToRender = [];
     
     if (activeMemberId === '__all__') {
-      blocksToRender = generateHeatmap;
+      blocksToRender = memberScheduleData?.plans?.[0]?.blocks || [];
     } else {
       if (!memberScheduleData || !memberScheduleData.plans || memberScheduleData.plans.length === 0) {
         return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-main)', fontWeight: '900' }}>등록된 일정이 없습니다.</div>;
@@ -106,7 +72,7 @@ export function ScheduleView() {
       
       blocksToRender = (currentPlan?.blocks || []).filter(block => {
         const cat = categories[block.category];
-        return cat && cat.isShared !== false; // default to true if not specified
+        return cat ? cat.isShared !== false : true;
       });
     }
 

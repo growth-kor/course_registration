@@ -133,17 +133,22 @@ export function SharedSpaceProvider({
                const mPlan = mData.plans.find(p => p.id === mSharedPlanId) || mData.plans[0];
                if (mPlan && mPlan.blocks) {
                   mPlan.blocks.forEach(b => {
-                     const key = `${b.dayIndex}_${b.startTime}_${b.endTime}`;
-                     if (!groupedBlocks[key]) {
-                         groupedBlocks[key] = {
-                             ...b,
-                             id: key,
-                             title: '일정 있음',
-                             isHeatmap: true,
-                             heatmapUsers: []
-                         };
-                     }
-                     groupedBlocks[key].heatmapUsers.push(activeRoom?.memberDetails?.[mId]?.name || '알 수 없음');
+                     const cat = mData.categories?.[b.category];
+                     if (cat && cat.isShared === false) return;
+
+                     (b.timeSlots || []).forEach(ts => {
+                         const key = `${ts.dayOfWeek}_${ts.startTime}_${ts.endTime}`;
+                         if (!groupedBlocks[key]) {
+                             groupedBlocks[key] = {
+                                 id: key,
+                                 title: '일정 있음',
+                                 isHeatmap: true,
+                                 timeSlots: [ts],
+                                 heatmapUsers: []
+                             };
+                         }
+                         groupedBlocks[key].heatmapUsers.push(activeRoom?.memberDetails?.[mId]?.name || '알 수 없음');
+                     });
                   });
                }
             }

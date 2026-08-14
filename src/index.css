@@ -1380,3 +1380,152 @@ body {
   border-left-color: #e4e4e7 !important;
 }
 
+/* Digital Business Card Footer */
+.footer-card-container {
+  margin-top: 1rem;
+  padding: 1.1rem 1.5rem;
+  background-color: #ffffff;
+  border: 2.5px solid var(--border-main);
+  box-shadow: var(--shadow-hard);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-card-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.footer-avatar-link {
+  display: inline-block;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.footer-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: 2px solid var(--border-main);
+  display: block;
+  object-fit: cover;
+  filter: grayscale(100%);
+  transition: filter 0.2s ease, transform 0.2s ease;
+  background-color: #ffffff;
+}
+
+.footer-avatar-link:hover .footer-avatar-img {
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+.footer-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.footer-brand-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.footer-brand-name {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+}
+
+.footer-brand-badge {
+  font-size: 0.7rem;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  padding: 0.1rem 0.35rem;
+  border: 1.5px solid var(--border-main);
+  background-color: #ffffff;
+  color: var(--text-main);
+}
+
+.footer-bio-line {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.footer-author-name {
+  color: var(--text-main);
+}
+
+.footer-bio-quote {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.footer-copyright {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.footer-card-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.footer-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  font-weight: 900;
+  font-size: 0.9rem;
+  text-decoration: none;
+  background-color: #ffffff;
+  color: var(--text-main);
+  border: 2px solid var(--border-main);
+  box-shadow: var(--shadow-hard-sm);
+  transition: all 0.15s ease;
+}
+
+.footer-action-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hard);
+}
+
+.dark-mode .footer-card-container {
+  background-color: #1c1c1f !important;
+  border-color: #38383f !important;
+}
+
+.dark-mode .footer-avatar-img {
+  border-color: #e4e4e7 !important;
+  background-color: #121212 !important;
+}
+
+.dark-mode .footer-brand-badge {
+  background-color: #232328 !important;
+  border-color: #38383f !important;
+  color: #f4f4f6 !important;
+}
+
+.dark-mode .footer-action-btn {
+  background-color: #232328 !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
+}
+
+
