@@ -868,7 +868,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                             </button>
                           </div>
                         </>
-                      )})}
+                      )})()}
 
                       {boardView === 'write' && (
                         <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', padding: '2.5rem' }}>
