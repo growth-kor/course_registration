@@ -186,16 +186,16 @@ function SharedSpaceContent() {
                                 <Globe size={13} /> PUBLIC
                               </div>
                             )}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.85rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.85rem' }}>
                               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                                {!room.themeImageUrl && (room.isPublic ? <Globe size={24} /> : <Lock size={24} />)}
+                                {!room.themeImageUrl && (room.isPublic ? <Globe size={22} /> : <Lock size={22} />)}
                               </div>
-                              <div style={{ overflow: 'hidden' }}>
-                                <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-main)', fontSize: '0.82rem', fontWeight: 'bold' }}>
-                                  <span>👑 {ownerName}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ margin: '0 0 0.2rem 0', fontWeight: '900', fontSize: '1.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                  <span style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)' }}>{ownerName}</span>
                                   <span>·</span>
-                                  <span>{room.memberIds?.length || 0}명 참여 중</span>
+                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{room.memberIds?.length || 0}명</span>
                                 </div>
                               </div>
                             </div>
@@ -276,18 +276,18 @@ function SharedSpaceContent() {
                             onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-4px, -4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-hard)'; }}
                             onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-hard-sm)'; }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.85rem' }}>
-                              <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.5rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                                {!room.themeImageUrl && <Globe size={28} />}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.85rem' }}>
+                              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                                {!room.themeImageUrl && <Globe size={22} />}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-main)', fontSize: '0.82rem', fontWeight: 'bold' }}>
-                                  <span>👑 {ownerName}</span>
+                                <h3 style={{ margin: '0 0 0.2rem 0', fontWeight: '900', fontSize: '1.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                  <span style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)' }}>{ownerName}</span>
                                   <span>·</span>
-                                  <span><Users size={13} style={{ verticalAlign: 'middle' }} /> {room.memberIds?.length || 0}명</span>
+                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{room.memberIds?.length || 0}명</span>
                                   <span>·</span>
-                                  <span>#{room.inviteCode}</span>
+                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>#{room.inviteCode}</span>
                                 </div>
                               </div>
                             </div>
