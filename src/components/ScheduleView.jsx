@@ -167,11 +167,11 @@ export function ScheduleView() {
                 }}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid var(--border-main)', backgroundColor: isOwner ? 'var(--border-main)' : 'transparent' }} />
-                    <span>{memberInfo.name}</span>
-                    {isOwner && <span style={{ fontSize: '0.7rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.1rem 0.35rem', fontWeight: 'bold' }}>방장</span>}
-                    {mId === user.uid && <span style={{ fontSize: '0.7rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.1rem 0.35rem', fontWeight: 'bold' }}>나</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'nowrap', overflow: 'hidden' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid var(--border-main)', backgroundColor: isOwner ? 'var(--border-main)' : 'transparent', flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{memberInfo.name}</span>
+                    {isOwner && <span style={{ fontSize: '0.65rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0 0.3rem', fontWeight: 'bold', flexShrink: 0, whiteSpace: 'nowrap' }}>방장</span>}
+                    {mId === user.uid && <span style={{ fontSize: '0.65rem', backgroundColor: 'var(--text-main)', color: 'white', border: '1.5px solid var(--border-main)', padding: '0 0.3rem', fontWeight: 'bold', flexShrink: 0, whiteSpace: 'nowrap' }}>나</span>}
                   </div>
                   {memberInfo.statusMessage && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-main)', marginLeft: '1.1rem' }}>

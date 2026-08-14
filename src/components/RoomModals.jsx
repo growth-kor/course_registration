@@ -1,7 +1,39 @@
-import React from 'react';
-import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, Trash2, Upload, X } from 'lucide-react';
 import { useSharedSpace } from '../context/SharedSpaceContext';
-import { createRoom, joinRoomByCode, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, updateRoomInfo } from '../firebase/config';
+import { createRoom, joinRoomByCode, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, updateRoomInfo, uploadRoomImage } from '../firebase/config';
+
+// Compress image using canvas to reduce Firebase Storage usage
+async function compressImage(file, maxWidthPx = 400, maxKB = 150) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      if (width > maxWidthPx) {
+        height = Math.round((height * maxWidthPx) / width);
+        width = maxWidthPx;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+
+      // Try quality 0.8 -> 0.6 -> 0.4 until under maxKB
+      let quality = 0.8;
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+      while (dataUrl.length * 0.75 > maxKB * 1024 && quality > 0.3) {
+        quality -= 0.15;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+      }
+      // Convert to Blob
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+    };
+    img.src = url;
+  });
+}
 
 export function RoomModals({
   newRoomName, setNewRoomName,
@@ -63,8 +95,62 @@ export function RoomModals({
     if (!activeRoom) return;
     const success = await updateMemberSharedPlan(activeRoom.id, user.uid, newPlanId);
     if (success) {
-      loadRooms(); // Refresh to update memberDetails locally
+      loadRooms();
     }
+  };
+
+  const [settingsName, setSettingsName] = useState('');
+  const [settingsDesc, setSettingsDesc] = useState('');
+  const [settingsImageFile, setSettingsImageFile] = useState(null);
+  const [settingsImagePreview, setSettingsImagePreview] = useState(null);
+  const [isUploadingRoomImage, setIsUploadingRoomImage] = useState(false);
+
+  // Initialize form state when modal opens
+  React.useEffect(() => {
+    if (showRoomSettingsModal && activeRoom) {
+      setSettingsName(activeRoom.name || '');
+      setSettingsDesc(activeRoom.description || '');
+      setSettingsImageFile(null);
+      setSettingsImagePreview(activeRoom.themeImageUrl || null);
+    }
+  }, [showRoomSettingsModal, activeRoom?.id]);
+
+  const handleRoomImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSettingsImageFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setSettingsImagePreview(previewUrl);
+  };
+
+  const handleSaveRoomSettings = async () => {
+    if (!settingsName.trim()) return;
+    setIsUploadingRoomImage(true);
+    let themeImageUrl = activeRoom.themeImageUrl || '';
+    
+    if (settingsImageFile) {
+      try {
+        const compressed = await compressImage(settingsImageFile, 400, 150);
+        const uploadedUrl = await uploadRoomImage(activeRoom.id, compressed);
+        if (uploadedUrl) themeImageUrl = uploadedUrl;
+      } catch (err) {
+        console.error('Image upload error:', err);
+        alert('이미지 업로드에 실패했습니다. URL을 대신 사용합니다.');
+      }
+    }
+
+    const updates = {
+      name: settingsName.trim(),
+      description: settingsDesc.trim(),
+      themeImageUrl
+    };
+    const success = await updateRoomInfo(activeRoom.id, updates);
+    if (success) {
+      setActiveRoom(prev => ({ ...prev, ...updates }));
+      setRooms(prev => prev.map(r => r.id === activeRoom.id ? { ...r, ...updates } : r));
+    }
+    setIsUploadingRoomImage(false);
+    setShowRoomSettingsModal(false);
   };
 
   return (
@@ -193,51 +279,53 @@ export function RoomModals({
                 <input 
                   type="text" 
                   className="input-field" 
-                  defaultValue={activeRoom.name}
-                  id="editRoomName"
+                  value={settingsName}
+                  onChange={e => setSettingsName(e.target.value)}
                 />
               </div>
               <div>
                 <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 소개글</label>
                 <textarea 
                   className="input-field" 
-                  defaultValue={activeRoom.description || ''}
-                  id="editRoomDesc"
+                  value={settingsDesc}
+                  onChange={e => setSettingsDesc(e.target.value)}
                   placeholder="우리 방을 소개하는 짧은 글을 적어주세요!"
                   style={{ resize: 'vertical', minHeight: '80px' }}
                 />
               </div>
               <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 테마 색상 (HEX 코드)</label>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>
+                  방 대표 이미지
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>자동 압축됨 (최대 150KB)</span>
+                </label>
+                {settingsImagePreview && (
+                  <div style={{ position: 'relative', display: 'inline-block', marginBottom: '0.75rem' }}>
+                    <img 
+                      src={settingsImagePreview} 
+                      alt="preview"
+                      style={{ width: '80px', height: '80px', objectFit: 'cover', border: '2px solid var(--border-main)', borderRadius: '50%' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setSettingsImagePreview(null); setSettingsImageFile(null); }}
+                      style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--text-main)', border: 'none', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.6rem 1rem', border: '2px dashed var(--border-main)', fontWeight: 'bold', backgroundColor: '#f8fafc' }}>
+                  <Upload size={16} />
+                  {settingsImageFile ? settingsImageFile.name : '이미지 파일 선택 (JPG, PNG, WEBP)'}
                   <input 
-                    type="color" 
-                    id="editRoomThemeColorPicker"
-                    defaultValue={activeRoom.themeColor || '#fbbf24'}
-                    style={{ width: '50px', height: '42px', padding: '0', cursor: 'pointer', border: '2px solid var(--border-main)' }}
-                    onChange={e => document.getElementById('editRoomThemeColor').value = e.target.value}
+                    type="file" 
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleRoomImageChange}
                   />
-                  <input 
-                    type="text" 
-                    className="input-field" 
-                    defaultValue={activeRoom.themeColor || '#fbbf24'}
-                    id="editRoomThemeColor"
-                    placeholder="예: #fbbf24"
-                    style={{ flex: 1 }}
-                  />
-                </div>
+                </label>
               </div>
-              <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>방 배경 이미지 URL</label>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  defaultValue={activeRoom.themeImageUrl || ''}
-                  id="editRoomThemeImage"
-                  placeholder="이미지 URL 주소를 입력하세요 (선택)"
-                />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border-main)' }}>
                 <span style={{ fontWeight: 'bold' }}>방 삭제</span>
                 <button className="btn btn-sm btn-danger" onClick={() => {
                   setShowRoomSettingsModal(false);
@@ -249,28 +337,12 @@ export function RoomModals({
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
               <button className="btn" onClick={() => setShowRoomSettingsModal(false)}>취소</button>
-              <button className="btn btn-primary" onClick={async () => {
-                const newName = document.getElementById('editRoomName').value.trim();
-                const newDesc = document.getElementById('editRoomDesc').value.trim();
-                const newThemeColor = document.getElementById('editRoomThemeColor').value.trim();
-                const newThemeImage = document.getElementById('editRoomThemeImage').value.trim();
-                
-                if (newName) {
-                  const updates = { 
-                    name: newName, 
-                    description: newDesc,
-                    themeColor: newThemeColor,
-                    themeImageUrl: newThemeImage
-                  };
-                  const success = await updateRoomInfo(activeRoom.id, updates);
-                  if (success) {
-                    setActiveRoom(prev => ({...prev, ...updates}));
-                    setRooms(prev => prev.map(r => r.id === activeRoom.id ? {...r, ...updates} : r));
-                  }
-                }
-                setShowRoomSettingsModal(false);
-              }}>
-                저장
+              <button 
+                className="btn btn-primary" 
+                onClick={handleSaveRoomSettings}
+                disabled={isUploadingRoomImage || !settingsName.trim()}
+              >
+                {isUploadingRoomImage ? '저장 중...' : '저장'}
               </button>
             </div>
           </div>

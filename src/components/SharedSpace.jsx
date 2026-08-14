@@ -60,18 +60,7 @@ function SharedSpaceContent() {
       position: 'relative',
       '--color-primary': 'var(--text-main)'
     }}>
-      {activeRoom?.themeImageUrl && (
-        <div style={{
-          position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundImage: `url(${activeRoom.themeImageUrl})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'grayscale(100%) contrast(1.2) opacity(0.15)',
-          zIndex: 0,
-          pointerEvents: 'none'
-        }} />
-      )}
+      {/* Room theme image is only shown in the avatar circle, not as a page background */}
       {!activeRoom ? (
         // DASHBOARD VIEW
         <div className="dashboard-view" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
@@ -291,85 +280,68 @@ function SharedSpaceContent() {
         // ACTIVE ROOM VIEW
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Top Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 2rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)', zIndex: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <button 
-                className="btn" 
-                onClick={() => setActiveRoom(null)}
-                style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                ← <span style={{ fontWeight: 'bold' }}>대시보드</span>
-              </button>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '2px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1rem', backgroundImage: activeRoom.themeImageUrl ? `url(${activeRoom.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                  {!activeRoom.themeImageUrl && (activeRoom.name ? activeRoom.name.substring(0,2) : '방')}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1.5rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)', zIndex: 10, gap: '1rem' }}>
+            {/* Left: Room Info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'white', border: '2px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1rem', backgroundImage: activeRoom.themeImageUrl ? `url(${activeRoom.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }}>
+                {!activeRoom.themeImageUrl && (activeRoom.name ? activeRoom.name.substring(0,2) : '방')}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: '900', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {activeRoom.name}
+                  {activeRoom.isPublic && <span style={{ backgroundColor: 'white', color: 'var(--text-main)', fontSize: '0.65rem', padding: '0.1rem 0.35rem', border: '1.5px solid var(--border-main)', display: 'inline-flex', alignItems: 'center', gap: '0.15rem', fontWeight: 'bold', flexShrink: 0 }}><Globe size={11}/>공개</span>}
                 </div>
-                <div>
-                  <h2 style={{ margin: '0 0 0.2rem 0', fontWeight: '900', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {activeRoom.name}
-                    {activeRoom.isPublic && <span style={{ backgroundColor: 'white', color: 'var(--text-main)', fontSize: '0.7rem', padding: '0.1rem 0.4rem', border: '1.5px solid var(--border-main)', display: 'inline-flex', alignItems: 'center', gap: '0.15rem', fontWeight: 'bold' }}><Globe size={12}/>공개</span>}
-                  </h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-main)', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Hash size={14} /> {activeRoom.inviteCode}</span>
-                    <span 
-                      style={{ color: 'var(--text-main)', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
-                      onClick={() => { navigator.clipboard.writeText(activeRoom.inviteCode); alert("복사 완료!"); }}
-                    >복사하기</span>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-main)', fontSize: '0.78rem', fontWeight: 'bold' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}><Hash size={12} /> {activeRoom.inviteCode}</span>
+                  <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { navigator.clipboard.writeText(activeRoom.inviteCode); alert("복사 완료!"); }}>복사</span>
                 </div>
               </div>
             </div>
               
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {/* Right: Tabs + Actions */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+              <button 
+                className="btn"
+                onClick={() => setActiveRoom(null)}
+                style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}
+              >
+                ← 대시보드
+              </button>
+
               <button 
                 className="btn"
                 onClick={() => setRoomTab('schedule')}
                 style={{ 
-                  padding: '0.5rem 1rem', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem', 
-                  fontWeight: 'bold', 
+                  padding: '0.45rem 0.9rem', 
+                  display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', 
                   backgroundColor: roomTab === 'schedule' ? '#f1f5f9' : 'white',
                   boxShadow: roomTab === 'schedule' ? 'none' : 'var(--shadow-hard-sm)', 
                   transform: roomTab === 'schedule' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <Calendar size={18} /> 시간표
+                <Calendar size={16} /> 시간표
               </button>
               <button 
                 className="btn"
                 onClick={() => setRoomTab('board')}
                 style={{ 
-                  padding: '0.5rem 1rem', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem', 
-                  fontWeight: 'bold', 
+                  padding: '0.45rem 0.9rem', 
+                  display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', 
                   backgroundColor: roomTab === 'board' ? '#f1f5f9' : 'white',
                   boxShadow: roomTab === 'board' ? 'none' : 'var(--shadow-hard-sm)', 
                   transform: roomTab === 'board' ? 'translate(2px, 2px)' : 'none' 
                 }}
               >
-                <MessageSquare size={18} /> 게시판
+                <MessageSquare size={16} /> 게시판
               </button>
               
               {!activeRoom.isPreview && activeRoom.ownerId === user.uid && (
                 <button 
                   className="btn"
                   onClick={() => setShowRoomSettingsModal(true)}
-                  style={{ 
-                    padding: '0.5rem 1rem', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.5rem', 
-                    fontWeight: 'bold', 
-                    backgroundColor: 'white',
-                    boxShadow: 'var(--shadow-hard-sm)'
-                  }}
+                  style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}
                 >
-                  <Settings size={18} /> 방 설정
+                  <Settings size={16} /> 방 설정
                 </button>
               )}
 
@@ -381,11 +353,7 @@ function SharedSpaceContent() {
                     setSharedPlanIdToJoin(plans && plans.length > 0 ? plans[0].id : '');
                     setShowJoinModal(true);
                   }}
-                  style={{ 
-                    padding: '0.5rem 1.5rem', 
-                    fontWeight: '900',
-                    fontSize: '1.1rem'
-                  }}
+                  style={{ padding: '0.45rem 1.2rem', fontWeight: '900' }}
                 >
                   이 방에 참여하기
                 </button>

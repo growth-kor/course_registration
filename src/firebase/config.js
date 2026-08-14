@@ -170,6 +170,20 @@ export async function saveScheduleToFirestore(userId, scheduleData) {
   }
 }
 
+export async function uploadRoomImage(roomId, imageBlob) {
+  const { isConfigured, storage } = initFirebase();
+  if (!isConfigured || !storage || !roomId || !imageBlob) return null;
+  try {
+    const storageRef = ref(storage, `room_images/${roomId}/avatar.jpg`);
+    const snapshot = await uploadBytes(storageRef, imageBlob, { contentType: 'image/jpeg' });
+    const downloadUrl = await getDownloadURL(snapshot.ref);
+    return downloadUrl;
+  } catch (e) {
+    console.error("Error uploading room image:", e.code, e.message);
+    return null;
+  }
+}
+
 export async function loadScheduleFromFirestore(userId) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !userId) return null;

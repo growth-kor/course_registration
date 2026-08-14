@@ -17,7 +17,7 @@ export function BlockModal({
 }) {
   if (!isOpen) return null;
 
-  const timeOptions = generate10MinStepOptions(6, 24);
+  const timeOptions = generate10MinStepOptions(6, 30);
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('self_study');
