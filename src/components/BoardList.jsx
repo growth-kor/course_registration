@@ -132,7 +132,7 @@ export function BoardList({
                   <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: '#64748b' }}>
                     {post.views || 0}
                   </td>
-                  <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                  <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>
                     {post.likes?.length || 0}
                   </td>
                 </tr>

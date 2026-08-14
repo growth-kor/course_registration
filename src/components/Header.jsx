@@ -74,8 +74,8 @@ export function Header({
               className="btn"
               onClick={() => onTabChange('personal')}
               style={{
-                backgroundColor: activeTab === 'personal' ? 'var(--color-primary)' : 'white',
-                color: 'var(--text-main)',
+                backgroundColor: activeTab === 'personal' ? 'var(--text-main)' : 'white',
+                color: activeTab === 'personal' ? '#ffffff' : 'var(--text-main)',
                 border: '2px solid var(--border-main)',
                 boxShadow: activeTab === 'personal' ? 'none' : 'var(--shadow-hard-sm)',
                 transform: activeTab === 'personal' ? 'none' : 'translate(-2px, -2px)',
@@ -91,8 +91,8 @@ export function Header({
               className="btn"
               onClick={() => onTabChange('shared')}
               style={{
-                backgroundColor: activeTab === 'shared' ? 'var(--color-primary)' : 'white',
-                color: 'var(--text-main)',
+                backgroundColor: activeTab === 'shared' ? 'var(--text-main)' : 'white',
+                color: activeTab === 'shared' ? '#ffffff' : 'var(--text-main)',
                 border: '2px solid var(--border-main)',
                 boxShadow: activeTab === 'shared' ? 'none' : 'var(--shadow-hard-sm)',
                 transform: activeTab === 'shared' ? 'none' : 'translate(-2px, -2px)',

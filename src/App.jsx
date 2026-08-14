@@ -10,6 +10,39 @@ import { SharedSpace } from './components/SharedSpace';
 import { Minimize } from 'lucide-react';
 import { updateUserProfile } from './firebase/config';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '3rem', textAlign: 'center', backgroundColor: '#ffffff', border: '3px solid var(--border-main)', margin: '2rem', boxShadow: 'var(--shadow-hard)' }}>
+          <h2 style={{ fontWeight: '900', marginBottom: '1rem' }}>화면을 불러오는 중 오류가 발생했습니다</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{this.state.error?.message || '알 수 없는 오류'}</p>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => {
+              sessionStorage.clear();
+              window.location.reload();
+            }}
+          >
+            기본 화면으로 초기화 및 새로고침
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const {
     plans,
@@ -194,7 +227,8 @@ export default function App() {
   };
 
   return (
-    <div className="app-layout">
+    <ErrorBoundary>
+      <div className="app-layout">
       {/* Header Bar */}
       {!isFullscreen && (
         <Header
@@ -344,6 +378,7 @@ export default function App() {
         onImport={importBlocks}
         currentPlanName={plans.find(p => p.id === currentPlanId)?.name}
       />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

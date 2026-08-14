@@ -203,7 +203,7 @@ export function PostDetail({
                       style={{ 
                         display: 'flex', alignItems: 'center', cursor: 'pointer',
                         padding: '1rem', backgroundColor: 'white', border: '2px solid var(--border-main)',
-                        boxShadow: isVoted ? 'inset 0 0 0 2px var(--color-primary)' : 'none',
+                        boxShadow: isVoted ? 'inset 0 0 0 2px var(--text-main)' : 'none',
                         position: 'relative', overflow: 'hidden'
                       }}
                       onClick={async () => {
@@ -224,7 +224,7 @@ export function PostDetail({
                     >
                       <div style={{ 
                         position: 'absolute', top: 0, left: 0, bottom: 0, 
-                        width: `${percentage}%`, backgroundColor: 'var(--color-primary)', opacity: 0.2, zIndex: 0,
+                        width: `${percentage}%`, backgroundColor: 'var(--text-main)', opacity: 0.15, zIndex: 0,
                         transition: 'width 0.3s ease'
                       }} />
                       <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', width: '100%', fontWeight: 'bold' }}>
@@ -267,7 +267,8 @@ export function PostDetail({
             padding: '0.75rem 2rem', 
             display: 'flex', alignItems: 'center', gap: '0.5rem', 
             fontWeight: '900', fontSize: '1.1rem',
-            backgroundColor: selectedPost.likes?.includes(user.uid) ? 'var(--color-primary)' : 'white',
+            backgroundColor: selectedPost.likes?.includes(user.uid) ? 'var(--text-main)' : 'white',
+            color: selectedPost.likes?.includes(user.uid) ? '#ffffff' : 'var(--text-main)',
             transform: selectedPost.likes?.includes(user.uid) ? 'translate(2px, 2px)' : 'none',
             boxShadow: selectedPost.likes?.includes(user.uid) ? 'none' : 'var(--shadow-hard-sm)'
           }}
@@ -292,7 +293,7 @@ export function PostDetail({
                 border: '2px solid var(--border-main)', 
                 padding: '1.5rem',
                 marginLeft: comment.replyTo ? '2rem' : '0',
-                borderLeft: comment.replyTo ? '4px solid var(--color-primary)' : '2px solid var(--border-main)'
+                borderLeft: comment.replyTo ? '4px solid var(--text-main)' : '2px solid var(--border-main)'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: '900' }}>{comment.authorName}</div>
@@ -331,7 +332,7 @@ export function PostDetail({
           marginLeft: replyToCommentId ? '2rem' : '0'
         }}>
           {replyToCommentId && (
-            <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+            <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: 'var(--text-main)' }}>
               답글 작성 중...
             </div>
           )}

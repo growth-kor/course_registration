@@ -121,30 +121,34 @@ export function SharedSpaceProvider({
       setLoadingSchedule(true);
 
       if (activeMemberId === '__all__') {
-        const allData = { plans: [{ id: '__all__', name: '🔥 시간표 종합 (Heatmap)', blocks: [] }], categories: {} };
+        const allData = { plans: [{ id: '__all__', name: '시간표 종합 (Heatmap)', blocks: [] }], categories: {} };
         const memberIds = activeRoom?.memberIds || [];
         const groupedBlocks = {};
         
         for (const mId of memberIds) {
-          const mData = await loadScheduleFromFirestore(mId);
-          if (mData && mData.plans && mData.plans.length > 0) {
-             const mSharedPlanId = activeRoom.memberDetails[mId]?.sharedPlanId;
-             const mPlan = mData.plans.find(p => p.id === mSharedPlanId) || mData.plans[0];
-             if (mPlan && mPlan.blocks) {
-                mPlan.blocks.forEach(b => {
-                   const key = `${b.dayIndex}_${b.startTime}_${b.endTime}`;
-                   if (!groupedBlocks[key]) {
-                       groupedBlocks[key] = {
-                           ...b,
-                           id: key,
-                           title: '일정 있음',
-                           isHeatmap: true,
-                           heatmapUsers: []
-                       };
-                   }
-                   groupedBlocks[key].heatmapUsers.push(activeRoom.memberDetails[mId]?.name || '알 수 없음');
-                });
-             }
+          try {
+            const mData = await loadScheduleFromFirestore(mId);
+            if (mData && mData.plans && mData.plans.length > 0) {
+               const mSharedPlanId = activeRoom?.memberDetails?.[mId]?.sharedPlanId;
+               const mPlan = mData.plans.find(p => p.id === mSharedPlanId) || mData.plans[0];
+               if (mPlan && mPlan.blocks) {
+                  mPlan.blocks.forEach(b => {
+                     const key = `${b.dayIndex}_${b.startTime}_${b.endTime}`;
+                     if (!groupedBlocks[key]) {
+                         groupedBlocks[key] = {
+                             ...b,
+                             id: key,
+                             title: '일정 있음',
+                             isHeatmap: true,
+                             heatmapUsers: []
+                         };
+                     }
+                     groupedBlocks[key].heatmapUsers.push(activeRoom?.memberDetails?.[mId]?.name || '알 수 없음');
+                  });
+               }
+            }
+          } catch (err) {
+            console.error("Error loading member schedule", mId, err);
           }
         }
         
@@ -156,19 +160,25 @@ export function SharedSpaceProvider({
         setMemberScheduleData(allData);
         setSelectedPlanId('__all__');
       } else {
-        const data = await loadScheduleFromFirestore(activeMemberId);
-        if (data) {
-          setMemberScheduleData(data);
-          const memberSharedPlanId = activeRoom?.memberDetails[activeMemberId]?.sharedPlanId;
-          const defaultPlanId = data.plans && data.plans.length > 0 ? data.plans[0].id : '';
-          
-          if (activeMemberId === user?.uid) {
-             setSelectedPlanId(memberSharedPlanId || defaultPlanId);
+        try {
+          const data = await loadScheduleFromFirestore(activeMemberId);
+          if (data) {
+            setMemberScheduleData(data);
+            const memberSharedPlanId = activeRoom?.memberDetails?.[activeMemberId]?.sharedPlanId;
+            const defaultPlanId = data.plans && data.plans.length > 0 ? data.plans[0].id : '';
+            
+            if (activeMemberId === user?.uid) {
+               setSelectedPlanId(memberSharedPlanId || defaultPlanId);
+            } else {
+               const hasSharedPlan = data.plans?.some(p => p.id === memberSharedPlanId);
+               setSelectedPlanId(hasSharedPlan ? memberSharedPlanId : defaultPlanId);
+            }
           } else {
-             const hasSharedPlan = data.plans?.some(p => p.id === memberSharedPlanId);
-             setSelectedPlanId(hasSharedPlan ? memberSharedPlanId : defaultPlanId);
+            setMemberScheduleData({ plans: [], categories: {} });
+            setSelectedPlanId('');
           }
-        } else {
+        } catch (err) {
+          console.error("Error loading schedule from firestore", err);
           setMemberScheduleData({ plans: [], categories: {} });
           setSelectedPlanId('');
         }

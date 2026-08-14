@@ -72,7 +72,7 @@ export function ScheduleView() {
     });
 
     // Populate slots with member names who are BUSY
-    activeRoom.memberIds.forEach(mId => {
+    (activeRoom.memberIds || []).forEach(mId => {
       const memberInfo = activeRoom.memberDetails?.[mId];
       if (!memberInfo) return;
       
@@ -81,11 +81,11 @@ export function ScheduleView() {
       
       if (!memberPlan) return;
 
-      memberPlan.blocks.forEach(block => {
+      (memberPlan.blocks || []).forEach(block => {
         const cat = memberCategories[block.category];
         if (cat && cat.isShared === false) return; // skip private blocks
 
-        block.timeSlots.forEach(ts => {
+        (block.timeSlots || []).forEach(ts => {
           const startMins = parseInt(ts.startTime.split(':')[0]) * 60 + parseInt(ts.startTime.split(':')[1]);
           const endMins = parseInt(ts.endTime.split(':')[0]) * 60 + parseInt(ts.endTime.split(':')[1]);
           
@@ -100,8 +100,8 @@ export function ScheduleView() {
     });
 
     // Now we want to find FREE members (everyone - BUSY members)
-    const allMemberNames = activeRoom.memberIds.map(mId => activeRoom.memberDetails?.[mId]?.name || '알 수 없음');
-    const totalMembers = allMemberNames.length;
+    const allMemberNames = (activeRoom.memberIds || []).map(mId => activeRoom.memberDetails?.[mId]?.name || '알 수 없음');
+    const totalMembers = allMemberNames.length || 1;
 
     // Convert slots into blocks based on contiguous free members
     const heatmapBlocks = [];
@@ -211,8 +211,8 @@ export function ScheduleView() {
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       <div style={{ width: '250px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
-        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--color-primary)' }}>
-          <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--text-main)', color: '#ffffff' }}>
+          <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
             <Users size={18} /> 참여 멤버 ({activeRoom.memberIds?.length || 0})
           </h3>
         </div>
@@ -259,10 +259,10 @@ export function ScheduleView() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isOwner ? '#fbbf24' : '#94a3b8' }} />
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isOwner ? 'var(--text-main)' : '#94a3b8' }} />
                   {memberInfo.name}
-                  {isOwner && <span style={{ fontSize: '0.7rem', backgroundColor: 'var(--text-main)', color: 'white', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>방장</span>}
-                  {mId === user.uid && <span style={{ fontSize: '0.7rem', backgroundColor: '#e2e8f0', color: '#475569', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>나</span>}
+                  {isOwner && <span style={{ fontSize: '0.7rem', backgroundColor: 'var(--text-main)', color: 'white', padding: '0.1rem 0.3rem', borderRadius: '0px' }}>방장</span>}
+                  {mId === user.uid && <span style={{ fontSize: '0.7rem', backgroundColor: '#e2e8f0', color: '#475569', padding: '0.1rem 0.3rem', borderRadius: '0px' }}>나</span>}
                 </div>
               </div>
             );
@@ -294,8 +294,8 @@ export function ScheduleView() {
           </div>
           {activeRoom.ownerId === user.uid && activeMemberId !== '__all__' && activeMemberId !== user.uid && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-               <button className="btn btn-sm" onClick={() => handleTransferOwnership(activeMemberId, activeRoom.memberDetails[activeMemberId]?.name)}>방장 위임</button>
-               <button className="btn btn-sm btn-danger" onClick={() => handleKickMember(activeMemberId, activeRoom.memberDetails[activeMemberId]?.name)}>강퇴</button>
+               <button className="btn btn-sm" onClick={() => handleTransferOwnership(activeMemberId, activeRoom.memberDetails?.[activeMemberId]?.name)}>방장 위임</button>
+               <button className="btn btn-sm btn-danger" onClick={() => handleKickMember(activeMemberId, activeRoom.memberDetails?.[activeMemberId]?.name)}>강퇴</button>
             </div>
           )}
         </div>
