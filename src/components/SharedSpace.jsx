@@ -14,7 +14,10 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   const [memberScheduleData, setMemberScheduleData] = useState(null);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [roomTab, setRoomTab] = useState('schedule'); // 'schedule' or 'board'
+  const [boardView, setBoardView] = useState('list'); // 'list' | 'write' | 'detail'
+  const [selectedPost, setSelectedPost] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostCategory, setNewPostCategory] = useState('일반');
   const [loadingPosts, setLoadingPosts] = useState(false);
@@ -109,15 +112,18 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   useEffect(() => {
     if (activeRoom && roomTab === 'board') {
       loadPosts();
+      setBoardView('list');
     }
   }, [activeRoom, roomTab]);
 
   const handleAddPost = async () => {
-    if (!newPostContent.trim() || !activeRoom) return;
-    const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostCategory, newPostContent.trim());
+    if ((!newPostTitle.trim() && !newPostContent.trim()) || !activeRoom) return;
+    const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostCategory, newPostTitle.trim(), newPostContent.trim());
     if (post) {
+      setNewPostTitle('');
       setNewPostContent('');
       setNewPostCategory('일반');
+      setBoardView('list');
       loadPosts();
     } else {
       alert("글 작성에 실패했습니다.");
@@ -583,73 +589,164 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                 ) : (
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '2rem' }}>
                     {/* Board UI */}
-                    <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                      <div style={{ backgroundColor: 'white', padding: '1.5rem', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MessageSquare size={20} /> 새 글 작성</h3>
-                          <select 
-                            className="input-field" 
-                            value={newPostCategory} 
-                            onChange={e => setNewPostCategory(e.target.value)}
-                            style={{ padding: '0.5rem', width: 'auto', minWidth: '120px' }}
-                          >
-                            {activeRoom.ownerId === user.uid && <option value="공지">공지</option>}
-                            <option value="일반">일반</option>
-                            <option value="질문">질문</option>
-                            <option value="기타">기타</option>
-                          </select>
-                        </div>
-                        <textarea 
-                          className="input-field" 
-                          placeholder="방 멤버들과 공유할 내용을 입력하세요..." 
-                          value={newPostContent}
-                          onChange={e => setNewPostContent(e.target.value)}
-                          style={{ minHeight: '100px', resize: 'vertical', width: '100%', padding: '1rem' }}
-                        />
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                          <button className="btn btn-primary" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={handleAddPost} disabled={!newPostContent.trim()}>
-                            <Send size={16} /> 등록하기
-                          </button>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {loadingPosts ? (
-                          <div style={{ textAlign: 'center', padding: '2rem', fontWeight: 'bold' }}>불러오는 중...</div>
-                        ) : posts.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: 'white', border: '2px solid var(--border-main)', color: 'var(--text-main)', fontWeight: 'bold' }}>
-                            아직 작성된 글이 없습니다. 첫 글을 남겨보세요!
-                          </div>
-                        ) : (
-                          posts.map(post => (
-                            <div key={post.id} style={{ backgroundColor: 'white', padding: '1.5rem', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard-sm)' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                <div>
-                                  <div style={{ fontWeight: '900', fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{ 
-                                      fontSize: '0.8rem', 
-                                      padding: '0.2rem 0.5rem', 
-                                      backgroundColor: post.category === '공지' ? 'var(--text-main)' : 'var(--color-primary)', 
-                                      color: post.category === '공지' ? 'white' : 'var(--text-main)',
-                                      border: '2px solid var(--border-main)'
-                                    }}>
-                                      {post.category || '일반'}
-                                    </span>
-                                    {post.authorName}
-                                  </div>
-                                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{new Date(post.createdAt).toLocaleString()}</div>
-                                </div>
-                                {(activeRoom.ownerId === user.uid || post.authorId === user.uid) && (
-                                  <button className="btn" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', backgroundColor: 'white', display: 'flex', alignItems: 'center', gap: '0.25rem' }} onClick={() => handleDeletePost(post.id)}>
-                                    <Trash2 size={14} /> 삭제
-                                  </button>
+                    <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' }}>
+                      {boardView === 'list' && (
+                        <>
+                          <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', overflow: 'hidden' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+                              <thead>
+                                <tr style={{ backgroundColor: 'var(--bg-main)', borderBottom: '2px solid var(--border-main)', fontWeight: '900', fontSize: '1.05rem' }}>
+                                  <th style={{ padding: '1rem', width: '80px', borderRight: '2px solid var(--border-main)' }}>분류</th>
+                                  <th style={{ padding: '1rem', textAlign: 'left' }}>제목</th>
+                                  <th style={{ padding: '1rem', width: '120px', borderLeft: '2px solid var(--border-main)' }}>글쓴이</th>
+                                  <th style={{ padding: '1rem', width: '160px', borderLeft: '2px solid var(--border-main)' }}>날짜</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {loadingPosts ? (
+                                  <tr><td colSpan="4" style={{ padding: '3rem', fontWeight: 'bold' }}>불러오는 중...</td></tr>
+                                ) : posts.length === 0 ? (
+                                  <tr><td colSpan="4" style={{ padding: '3rem', fontWeight: 'bold', color: 'var(--text-main)' }}>아직 등록된 글이 없습니다.</td></tr>
+                                ) : (
+                                  posts.map(post => (
+                                    <tr 
+                                      key={post.id} 
+                                      style={{ borderBottom: '1px solid var(--border-main)', cursor: 'pointer', transition: 'background-color 0.2s' }} 
+                                      onClick={() => { setSelectedPost(post); setBoardView('detail'); }}
+                                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'white'}
+                                    >
+                                      <td style={{ padding: '0.75rem 1rem', borderRight: '2px solid var(--border-main)', fontWeight: 'bold', color: post.category === '공지' ? '#ef4444' : 'var(--text-main)' }}>
+                                        {post.category || '일반'}
+                                      </td>
+                                      <td style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                                        {post.title || '(제목 없음)'}
+                                      </td>
+                                      <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem' }}>
+                                        {post.authorName}
+                                      </td>
+                                      <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.8rem', color: '#64748b' }}>
+                                        {new Date(post.createdAt).toLocaleDateString()} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      </td>
+                                    </tr>
+                                  ))
                                 )}
-                              </div>
-                              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>{post.content}</div>
+                              </tbody>
+                            </table>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ padding: '0.75rem 2rem', fontWeight: '900', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }} 
+                              onClick={() => {
+                                setNewPostTitle('');
+                                setNewPostContent('');
+                                setNewPostCategory('일반');
+                                setBoardView('write');
+                              }}
+                            >
+                              글쓰기
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {boardView === 'write' && (
+                        <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', padding: '2.5rem' }}>
+                          <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <MessageSquare size={24} /> 새 글 쓰기
+                          </h2>
+                          
+                          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                            <select 
+                              className="input-field" 
+                              value={newPostCategory} 
+                              onChange={e => setNewPostCategory(e.target.value)}
+                              style={{ padding: '0.75rem', width: 'auto', minWidth: '120px', fontWeight: 'bold' }}
+                            >
+                              {activeRoom.ownerId === user.uid && <option value="공지">공지</option>}
+                              <option value="일반">일반</option>
+                              <option value="질문">질문</option>
+                              <option value="기타">기타</option>
+                            </select>
+                            <input 
+                              type="text" 
+                              className="input-field" 
+                              placeholder="제목을 입력하세요" 
+                              style={{ flex: 1, padding: '0.75rem', fontWeight: 'bold' }} 
+                              value={newPostTitle} 
+                              onChange={e => setNewPostTitle(e.target.value)} 
+                            />
+                          </div>
+                          
+                          <textarea 
+                            className="input-field" 
+                            style={{ minHeight: '350px', width: '100%', resize: 'vertical', padding: '1rem', fontSize: '1.05rem', lineHeight: '1.6' }} 
+                            placeholder="내용을 입력하세요..." 
+                            value={newPostContent} 
+                            onChange={e => setNewPostContent(e.target.value)}
+                          ></textarea>
+                          
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+                            <button className="btn" style={{ padding: '0.75rem 2rem', backgroundColor: '#f1f5f9', fontWeight: 'bold' }} onClick={() => setBoardView('list')}>취소</button>
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ padding: '0.75rem 2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }} 
+                              onClick={handleAddPost} 
+                              disabled={!newPostTitle.trim() && !newPostContent.trim()}
+                            >
+                              <Send size={18} /> 등록
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {boardView === 'detail' && selectedPost && (
+                        <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', padding: '2.5rem' }}>
+                          <div style={{ borderBottom: '2px solid var(--border-main)', paddingBottom: '1.5rem', marginBottom: '2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                               <span style={{ 
+                                 padding: '0.2rem 0.6rem', 
+                                 backgroundColor: selectedPost.category === '공지' ? 'var(--text-main)' : 'var(--color-primary)', 
+                                 color: selectedPost.category === '공지' ? 'white' : 'var(--text-main)',
+                                 border: '2px solid var(--border-main)',
+                                 fontWeight: 'bold',
+                                 fontSize: '0.9rem'
+                               }}>
+                                 {selectedPost.category || '일반'}
+                               </span>
+                               <h2 style={{ margin: 0, fontWeight: '900', fontSize: '1.5rem' }}>{selectedPost.title || '(제목 없음)'}</h2>
                             </div>
-                          ))
-                        )}
-                      </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={16} /> {selectedPost.authorName}</span>
+                               <span>{new Date(selectedPost.createdAt).toLocaleString()}</span>
+                            </div>
+                          </div>
+                          
+                          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.7', minHeight: '250px', fontSize: '1.1rem', color: 'var(--text-main)', padding: '0.5rem' }}>
+                            {selectedPost.content}
+                          </div>
+                          
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', paddingTop: '1.5rem', borderTop: '2px solid var(--border-main)' }}>
+                            <button 
+                              onClick={() => { setBoardView('list'); setSelectedPost(null); }} 
+                              className="btn" 
+                              style={{ padding: '0.5rem 1.5rem', backgroundColor: 'var(--color-primary)', fontWeight: 'bold' }}
+                            >
+                              목록으로
+                            </button>
+                            {(activeRoom.ownerId === user.uid || selectedPost.authorId === user.uid) && (
+                              <button 
+                                onClick={() => handleDeletePost(selectedPost.id)} 
+                                className="btn" 
+                                style={{ padding: '0.5rem 1.5rem', backgroundColor: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                              >
+                                <Trash2 size={16} /> 삭제
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

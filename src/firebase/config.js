@@ -314,7 +314,7 @@ export async function fetchPosts(roomId) {
   }
 }
 
-export async function addPost(roomId, userId, userName, category, content) {
+export async function addPost(roomId, userId, userName, category, title, content) {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db || !roomId || !userId || !content) return null;
 
@@ -324,6 +324,7 @@ export async function addPost(roomId, userId, userName, category, content) {
       authorId: userId,
       authorName: userName,
       category: category || '일반',
+      title: title || '(제목 없음)',
       content,
       createdAt: new Date().toISOString()
     };
