@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Calendar, Settings } from 'lucide-react';
+import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Calendar, Settings, Megaphone } from 'lucide-react';
 import { useSharedSpace, SharedSpaceProvider } from '../context/SharedSpaceContext';
 import { useLanguage } from '../context/LanguageContext';
 import { ScheduleView } from './ScheduleView';
@@ -7,6 +7,7 @@ import { BoardList } from './BoardList';
 import { PostWrite } from './PostWrite';
 import { PostDetail } from './PostDetail';
 import { RoomModals } from './RoomModals';
+import { NoticeBoard } from './NoticeBoard';
 
 export function SharedSpace(props) {
   return (
@@ -372,6 +373,19 @@ function SharedSpaceContent() {
               </button>
               <button 
                 className="btn"
+                onClick={() => setRoomTab('notice')}
+                style={{ 
+                  padding: '0.45rem 0.9rem', 
+                  display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', 
+                  backgroundColor: roomTab === 'notice' ? '#f1f5f9' : 'white',
+                  boxShadow: roomTab === 'notice' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: roomTab === 'notice' ? 'translate(2px, 2px)' : 'none' 
+                }}
+              >
+                <Megaphone size={16} /> {t('tab_notice')}
+              </button>
+              <button 
+                className="btn"
                 onClick={() => setRoomTab('board')}
                 style={{ 
                   padding: '0.45rem 0.9rem', 
@@ -423,6 +437,10 @@ function SharedSpaceContent() {
           <div style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg-main)', display: 'flex', flexDirection: 'column' }}>
             {roomTab === 'schedule' ? (
               <ScheduleView />
+            ) : roomTab === 'notice' ? (
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                <NoticeBoard />
+              </div>
             ) : (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '2rem' }}>
                 <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column' }}>

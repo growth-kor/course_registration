@@ -633,3 +633,81 @@ export async function uploadImage(file, path = 'images') {
     return null;
   }
 }
+
+// ==========================================
+// Notice Board Functions
+// ==========================================
+
+export async function fetchNotices(roomId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId) return [];
+
+  try {
+    const noticesRef = collection(db, 'rooms', roomId, 'notices');
+    const querySnapshot = await getDocs(noticesRef);
+    const notices = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt descending (newest first)
+    return notices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } catch (e) {
+    console.error("Error fetching notices:", e);
+    return [];
+  }
+}
+
+export async function addNotice(roomId, userId, userName, title, content) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !userId || !title || !content) return null;
+
+  try {
+    const noticesRef = collection(db, 'rooms', roomId, 'notices');
+    const noticeData = {
+      authorId: userId,
+      authorName: userName,
+      title,
+      content,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const newDoc = await addDoc(noticesRef, noticeData);
+    
+    // Update room lastActivityAt
+    const roomRef = doc(db, 'rooms', roomId);
+    await updateDoc(roomRef, { lastActivityAt: new Date().toISOString() }).catch(() => {});
+
+    return { id: newDoc.id, ...noticeData };
+  } catch (e) {
+    console.error("Error adding notice:", e);
+    return null;
+  }
+}
+
+export async function updateNotice(roomId, noticeId, updates) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !noticeId) return false;
+
+  try {
+    const noticeRef = doc(db, 'rooms', roomId, 'notices', noticeId);
+    await updateDoc(noticeRef, {
+      ...updates,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (e) {
+    console.error("Error updating notice:", e);
+    return false;
+  }
+}
+
+export async function deleteNotice(roomId, noticeId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !noticeId) return false;
+
+  try {
+    const noticeRef = doc(db, 'rooms', roomId, 'notices', noticeId);
+    await deleteDoc(noticeRef);
+    return true;
+  } catch (e) {
+    console.error("Error deleting notice:", e);
+    return false;
+  }
+}
