@@ -28,27 +28,27 @@
 
 /* Dark Mode Variables */
 :root.dark-mode {
-  --bg-paper: #09090b;
-  --bg-card: #18181b;
-  --text-main: #f4f4f5;
-  --text-muted: #f4f4f5;
-  --border-main: #e4e4e7;
-  --border-grid: #27272a;
-  --border-grid-dark: #3f3f46;
+  --bg-paper: #121214;
+  --bg-card: #1c1c1f;
+  --text-main: #f4f4f6;
+  --text-muted: #a1a1aa;
+  --border-main: #38383f;
+  --border-grid: #222226;
+  --border-grid-dark: #2f2f35;
 
-  /* Adjust Highlighter Colors for Dark Mode if needed */
-  --hl-yellow: #ca8a04;
-  --hl-mint: #0f766e;
-  --hl-orange: #c2410c;
-  --hl-lavender: #6b21a8;
-  --hl-sky: #0369a1;
-  --hl-lime: #4d7c0f;
-  --hl-pink: #be185d;
-  --hl-sand: #854d0e;
+  /* High-contrast pastel highlights */
+  --hl-yellow: #fde047;
+  --hl-mint: #5eead4;
+  --hl-orange: #fdba74;
+  --hl-lavender: #d8b4fe;
+  --hl-sky: #7dd3fc;
+  --hl-lime: #bef264;
+  --hl-pink: #f472b6;
+  --hl-sand: #fde047;
   
-  --shadow-hard: 3px 3px 0px #e4e4e7;
-  --shadow-hard-lg: 5px 5px 0px #e4e4e7;
-  --shadow-hard-sm: 2px 2px 0px #e4e4e7;
+  --shadow-hard: 3px 3px 0px #000000;
+  --shadow-hard-lg: 5px 5px 0px #000000;
+  --shadow-hard-sm: 2px 2px 0px #000000;
 }
 
 * {
@@ -1229,11 +1229,11 @@ body {
    COMPREHENSIVE DARK MODE OVERRIDES
    ======================================================== */
 .dark-mode body {
-  background-color: #09090b;
-  color: #f4f4f5;
+  background-color: #121214;
+  color: #f4f4f6;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
 .dark-mode .header-container,
@@ -1244,17 +1244,17 @@ body {
 .dark-mode .day-column,
 .dark-mode .time-ticks-column,
 .dark-mode .grid-header-row {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
+  background-color: #1c1c1f !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
 }
 
 .dark-mode .header-container {
-  box-shadow: 3px 3px 0px #e4e4e7;
+  box-shadow: 3px 3px 0px #000000;
 }
 
 .dark-mode .main-content-area {
-  box-shadow: 5px 5px 0px #e4e4e7;
+  box-shadow: 5px 5px 0px #000000;
 }
 
 .dark-mode .btn,
@@ -1267,83 +1267,90 @@ body {
 .dark-mode .input-field,
 .dark-mode .select-field,
 .dark-mode .textarea-field {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
-  box-shadow: 2px 2px 0px #e4e4e7 !important;
+  background-color: #232328 !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
+  box-shadow: 2px 2px 0px #000000 !important;
 }
 
 .dark-mode .btn:hover,
 .dark-mode .plan-dropdown:hover,
 .dark-mode .auth-status-badge:hover {
-  background-color: #27272a !important;
+  background-color: #2c2c33 !important;
 }
 
 .dark-mode .btn:active {
-  box-shadow: 1px 1px 0px #e4e4e7 !important;
+  box-shadow: 0px 0px 0px #000000 !important;
+  transform: translate(2px, 2px) !important;
 }
 
 .dark-mode .grid-header-cell {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
+  background-color: #1c1c1f !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
 }
 
 .dark-mode .grid-header-cell.today-col {
-  background-color: #713f12 !important;
+  background-color: #fde047 !important;
+  color: #000000 !important;
+}
+
+.dark-mode .today-badge {
+  background-color: #000000 !important;
   color: #ffffff !important;
 }
 
 .dark-mode .today-column-bg {
-  background-color: rgba(113, 63, 18, 0.2) !important;
+  background-color: rgba(253, 224, 71, 0.05) !important;
 }
 
 .dark-mode .grid-hour-cell {
-  border-bottom: 1px dashed #3f3f46 !important;
+  border-bottom: 1px dashed #28282f !important;
 }
 
 .dark-mode .grid-hour-cell:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 .dark-mode .grid-hour-cell.selected {
-  background-color: #1e3a5f !important;
-  border: 2px solid #60a5fa !important;
+  background-color: rgba(59, 130, 246, 0.25) !important;
+  border: 1.5px solid #3b82f6 !important;
 }
 
 .dark-mode .time-tick-cell {
-  border-bottom: 1px solid #3f3f46 !important;
+  border-bottom: 1px solid #28282f !important;
 }
 
 .dark-mode .time-tick-text {
-  color: #f4f4f5 !important;
+  color: #a1a1aa !important;
 }
 
 .dark-mode .block-item {
-  border-color: #e4e4e7 !important;
-  box-shadow: 2px 2px 0px #e4e4e7 !important;
+  border-color: #000000 !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+  color: #000000 !important;
 }
 
 .dark-mode table,
 .dark-mode th,
 .dark-mode td {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
+  background-color: #1c1c1f !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
 }
 
 .dark-mode thead tr {
-  background-color: #27272a !important;
+  background-color: #232328 !important;
 }
 
 .dark-mode tbody tr:hover {
-  background-color: #222226 !important;
+  background-color: #25252b !important;
 }
 
 .dark-mode .category-btn {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
+  background-color: #232328 !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
 }
 
 .dark-mode div[style*="backgroundColor: 'white'"],
@@ -1352,8 +1359,8 @@ body {
 .dark-mode div[style*="backgroundColor: \"#ffffff\""],
 .dark-mode div[style*="background: white"],
 .dark-mode div[style*="background: #ffffff"] {
-  background-color: #18181b !important;
-  color: #f4f4f5 !important;
-  border-color: #e4e4e7 !important;
+  background-color: #1c1c1f !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
 }
 
