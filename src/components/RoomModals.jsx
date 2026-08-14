@@ -250,21 +250,39 @@ export function RoomModals({
       {showPlanChangeModal && (
         <div className="modal-overlay" onClick={() => setShowPlanChangeModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem' }}>공유 시간표 변경</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>새로 공유할 시간표 선택</label>
-                <select 
-                  className="input-field"
-                  value={selectedPlanId}
-                  onChange={e => handleUpdateSharedPlan(e.target.value)}
-                >
-                  {plans.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-                <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>선택 시 즉시 저장되며 다른 멤버들에게 이 시간표가 보여집니다.</p>
+            <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem' }}>📅 공개 시간표 설정</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <label style={{ fontWeight: 'bold', display: 'block' }}>이 방에 공개할 시간표를 선택하세요</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {plans.map(p => (
+                  <div 
+                    key={p.id}
+                    onClick={() => handleUpdateSharedPlan(p.id)}
+                    style={{
+                      border: selectedPlanId === p.id ? '2.5px solid #3b82f6' : '2px solid var(--border-main)',
+                      padding: '1rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: selectedPlanId === p.id ? '#eff6ff' : 'white',
+                      boxShadow: selectedPlanId === p.id ? 'none' : 'var(--shadow-hard-sm)'
+                    }}
+                  >
+                    <span style={{ fontWeight: selectedPlanId === p.id ? '900' : 'bold', color: selectedPlanId === p.id ? '#1d4ed8' : 'var(--text-main)' }}>
+                      {p.name}
+                    </span>
+                    <div style={{
+                      width: '24px', height: '24px', borderRadius: '50%',
+                      border: selectedPlanId === p.id ? '6px solid #3b82f6' : '2px solid var(--border-main)',
+                      backgroundColor: 'white'
+                    }} />
+                  </div>
+                ))}
               </div>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                선택 시 즉시 저장되며, 다른 멤버들에게 이 시간표가 보여집니다.
+              </p>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
               <button className="btn btn-primary" onClick={() => setShowPlanChangeModal(false)}>닫기</button>

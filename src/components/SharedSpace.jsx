@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Calendar, Settings } from 'lucide-react';
 import { useSharedSpace, SharedSpaceProvider } from '../context/SharedSpaceContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,7 +24,8 @@ function SharedSpaceContent() {
     roomTab, setRoomTab, boardView, setBoardView, toastMessage,
     setShowCreateModal, setShowJoinModal,
     setSharedPlanIdToJoin,
-    showRoomSettingsModal, setShowRoomSettingsModal
+    showRoomSettingsModal, setShowRoomSettingsModal,
+    setShowPlanChangeModal
   } = useSharedSpace();
   const { t } = useLanguage();
 
@@ -335,6 +337,16 @@ function SharedSpaceContent() {
               >
                 <MessageSquare size={16} /> {t('tab_board')}
               </button>
+
+              {!activeRoom.isPreview && (
+                <button 
+                  className="btn"
+                  onClick={() => setShowPlanChangeModal(true)}
+                  style={{ padding: '0.45rem 0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 'bold', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}
+                >
+                  <Calendar size={16} /> 공개 시간표 설정
+                </button>
+              )}
               
               {!activeRoom.isPreview && activeRoom.ownerId === user.uid && (
                 <button 
