@@ -35,8 +35,17 @@ export function Header({
     <header className="header-container">
       <div className="header-top-row">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-          <div className="brand-section">
-            <h1 className="brand-title" style={{ marginRight: '1rem' }}>주간 일정 플래너</h1>
+          <div className="brand-section" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <h1 className="brand-title" style={{ margin: 0 }}>주간 일정 플래너</h1>
+            <button 
+              className="btn btn-sm" 
+              onClick={onToggleDarkMode} 
+              title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
+              style={{ padding: '0.35rem 0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}
+            >
+              {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
+              <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{isDarkMode ? '라이트' : '다크'}</span>
+            </button>
           </div>
           
           {activeTab === 'personal' && (
@@ -163,10 +172,6 @@ export function Header({
 
           <button className="btn" onClick={onToggleFullscreen} title="전체화면 (f)">
             <Maximize size={16} /> 전체화면
-          </button>
-
-          <button className="btn" onClick={onToggleDarkMode} title="다크 모드 전환">
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
 

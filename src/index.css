@@ -1353,14 +1353,30 @@ body {
   border-color: #38383f !important;
 }
 
-.dark-mode div[style*="backgroundColor: 'white'"],
-.dark-mode div[style*="backgroundColor: '#ffffff'"],
-.dark-mode div[style*="backgroundColor: \"white\""],
-.dark-mode div[style*="backgroundColor: \"#ffffff\""],
-.dark-mode div[style*="background: white"],
-.dark-mode div[style*="background: #ffffff"] {
+.dark-mode [style*="background-color: white"],
+.dark-mode [style*="background-color: #ffffff"],
+.dark-mode [style*="background-color: rgb(255, 255, 255)"],
+.dark-mode [style*="background-color: #f8fafc"],
+.dark-mode [style*="background-color: #f1f5f9"],
+.dark-mode [style*="background-color: rgb(248, 250, 252)"],
+.dark-mode [style*="background-color: rgb(241, 245, 249)"],
+.dark-mode [style*="background: white"],
+.dark-mode [style*="background: #ffffff"],
+.dark-mode [style*="background: rgb(255, 255, 255)"] {
   background-color: #1c1c1f !important;
   color: #f4f4f6 !important;
   border-color: #38383f !important;
+}
+
+.dark-mode .status-box {
+  background-color: #232328 !important;
+  color: #f4f4f6 !important;
+  border-color: #38383f !important;
+}
+
+.dark-mode blockquote {
+  background-color: #232328 !important;
+  color: #f4f4f6 !important;
+  border-left-color: #e4e4e7 !important;
 }
 
