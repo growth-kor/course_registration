@@ -154,16 +154,16 @@ function SharedSpaceContent() {
                     {t('my_rooms')} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>({rooms.length})</span>
                   </h2>
                   {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', fontWeight: '900', fontSize: '1.2rem', color: 'var(--text-main)', border: '3px solid var(--border-main)', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}>[ 데이터를 불러오는 중... ]</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', fontWeight: '900', fontSize: '1.2rem', color: 'var(--text-main)', border: '3px solid var(--border-main)', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}>[ {t('loading_data')} ]</div>
                   ) : rooms.length === 0 ? (
                     <div style={{ padding: '4rem 2rem', textAlign: 'center', border: '3px dashed var(--border-main)', backgroundColor: 'white' }}>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontWeight: 'bold' }}>아직 소속된 공유방이 없습니다.</p>
-                      <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>새 방을 만들거나 초대 코드로 참여해 보세요!</p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('no_joined_rooms')}</p>
+                      <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>{t('no_joined_rooms_desc')}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                       {rooms.map(room => {
-                        const ownerName = room.memberDetails?.[room.ownerId]?.name || '방장';
+                        const ownerName = room.memberDetails?.[room.ownerId]?.name || t('room_owner');
                         return (
                           <div 
                             key={room.id}
@@ -183,7 +183,7 @@ function SharedSpaceContent() {
                           >
                             {room.isPublic && (
                               <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: 'white', color: 'var(--text-main)', border: '2px solid var(--border-main)', padding: '0.15rem 0.4rem', fontWeight: '900', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '2px 2px 0 var(--border-main)' }}>
-                                <Globe size={13} /> PUBLIC
+                                <Globe size={13} /> {t('public')}
                               </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.85rem' }}>
@@ -195,12 +195,12 @@ function SharedSpaceContent() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 'bold' }}>
                                   <span style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)' }}>{ownerName}</span>
                                   <span>·</span>
-                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{room.memberIds?.length || 0}명</span>
+                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{room.memberIds?.length || 0}{t('member_unit')}</span>
                                 </div>
                               </div>
                             </div>
                             <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                              {room.description || '소개글이 없습니다.'}
+                              {room.description || t('no_description')}
                             </p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f8fafc', padding: '0.5rem', border: '2px solid var(--border-main)' }} onClick={e => e.stopPropagation()}>
                               <Key size={16} />
@@ -233,23 +233,23 @@ function SharedSpaceContent() {
                       <input 
                         type="text" 
                         className="input-field" 
-                        placeholder="방 이름 또는 소개글 검색..."
+                        placeholder={t('search_room_placeholder')}
                         style={{ paddingLeft: '2.5rem', width: '300px' }}
                       />
                     </div>
                   </div>
                   
                   {loadingExplore ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', fontWeight: '900', fontSize: '1.2rem', color: 'var(--text-main)', border: '3px solid var(--border-main)', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}>[ 공개방 탐색 중... ]</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', fontWeight: '900', fontSize: '1.2rem', color: 'var(--text-main)', border: '3px solid var(--border-main)', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}>[ {t('loading_explore')} ]</div>
                   ) : publicRooms.length === 0 ? (
                     <div style={{ padding: '4rem 2rem', textAlign: 'center', border: '3px dashed var(--border-main)', backgroundColor: 'white' }}>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontWeight: 'bold' }}>현재 공개된 방이 없습니다.</p>
-                      <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>첫 번째 공개방의 주인이 되어보세요!</p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', fontWeight: 'bold' }}>{t('no_public_rooms')}</p>
+                      <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>{t('no_public_rooms_desc')}</p>
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                       {publicRooms.map(room => {
-                        const ownerName = room.memberDetails?.[room.ownerId]?.name || '방장';
+                        const ownerName = room.memberDetails?.[room.ownerId]?.name || t('room_owner');
                         const isJoined = !!rooms.find(r => r.id === room.id);
 
                         return (
@@ -285,14 +285,14 @@ function SharedSpaceContent() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 'bold' }}>
                                   <span style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-main)' }}>{ownerName}</span>
                                   <span>·</span>
-                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{room.memberIds?.length || 0}명</span>
+                                  <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{room.memberIds?.length || 0}{t('member_unit')}</span>
                                   <span>·</span>
                                   <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>#{room.inviteCode}</span>
                                 </div>
                               </div>
                             </div>
                             <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', flex: 1, height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                              {room.description || '소개글이 없습니다.'}
+                              {room.description || t('no_description')}
                             </p>
                             <button 
                               className={`btn ${isJoined ? '' : 'btn-primary'}`}
