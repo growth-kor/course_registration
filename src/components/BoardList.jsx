@@ -126,10 +126,10 @@ export function BoardList({
                   <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem' }}>
                     {post.authorName}
                   </td>
-                  <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.8rem', color: '#64748b' }}>
+                  <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.8rem', color: 'var(--text-main)' }}>
                     {new Date(post.createdAt).toLocaleDateString()}
                   </td>
-                  <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: '#64748b' }}>
+                  <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: 'var(--text-main)' }}>
                     {post.views || 0}
                   </td>
                   <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>

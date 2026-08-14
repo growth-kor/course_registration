@@ -3,7 +3,7 @@
   --bg-paper: #f6f5ef;
   --bg-card: #ffffff;
   --text-main: #121212;
-  --text-muted: #555555;
+  --text-muted: #121212;
   --border-main: #18181b;
   --border-grid: #e2e0d4;
   --border-grid-dark: #cbd5e1;
@@ -350,7 +350,7 @@ body {
   font-family: var(--font-mono);
   font-size: 0.725rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-main);
 }
 
 .day-column {

@@ -113,7 +113,7 @@ export function Header({
                 <Cloud size={16} className="cloud-icon active" />
                 <span className="user-email">{user.email || user.displayName}</span>
               </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 'bold' }}>프로필 설정</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-main)', marginTop: '2px', fontWeight: 'bold' }}>프로필 설정</span>
             </div>
           ) : (
             <span className="user-logged-out">

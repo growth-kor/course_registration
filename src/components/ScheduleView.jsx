@@ -53,25 +53,11 @@ export function ScheduleView() {
     }
   };
 
-  // 15-minute intervals for heatmap
+  // Overlay all members' shared schedules
   const generateHeatmap = useMemo(() => {
     if (activeMemberId !== '__all__' || !activeRoom) return [];
 
-    const DAYS = [1, 2, 3, 4, 5, 6, 7];
-    const gridStartHour = 6;
-    const gridEndHour = 24;
-    const slots = {}; // { day_time: [memberNames...] }
-
-    // Initialize slots
-    DAYS.forEach(day => {
-      for (let h = gridStartHour; h < gridEndHour; h++) {
-        for (let m = 0; m < 60; m += 15) {
-          slots[`${day}_${h * 60 + m}`] = [];
-        }
-      }
-    });
-
-    // Populate slots with member names who are BUSY
+    const allBlocks = [];
     (activeRoom.memberIds || []).forEach(mId => {
       const memberInfo = activeRoom.memberDetails?.[mId];
       if (!memberInfo) return;
@@ -86,83 +72,21 @@ export function ScheduleView() {
         if (cat && cat.isShared === false) return; // skip private blocks
 
         (block.timeSlots || []).forEach(ts => {
-          const startMins = parseInt(ts.startTime.split(':')[0]) * 60 + parseInt(ts.startTime.split(':')[1]);
-          const endMins = parseInt(ts.endTime.split(':')[0]) * 60 + parseInt(ts.endTime.split(':')[1]);
-          
-          for (let time = startMins; time < endMins; time += 15) {
-            const key = `${ts.dayOfWeek}_${time}`;
-            if (slots[key]) {
-              slots[key].push(memberInfo.name);
-            }
-          }
+          allBlocks.push({
+            id: `hm_${mId}_${block.id}_${ts.id}`,
+            title: `[${memberInfo.name}] ${block.title}`,
+            color: '#ffffff',
+            timeSlots: [ts],
+            category: block.category,
+            location: block.location,
+            memo: block.memo,
+            isHeatmap: false
+          });
         });
       });
     });
 
-    // Now we want to find FREE members (everyone - BUSY members)
-    const allMemberNames = (activeRoom.memberIds || []).map(mId => activeRoom.memberDetails?.[mId]?.name || '알 수 없음');
-    const totalMembers = allMemberNames.length || 1;
-
-    // Convert slots into blocks based on contiguous free members
-    const heatmapBlocks = [];
-    let blockIdCounter = 1;
-
-    DAYS.forEach(day => {
-      let currentFreeMembers = [];
-      let currentStartMins = null;
-
-      for (let h = gridStartHour; h <= gridEndHour; h++) {
-        for (let m = 0; m < 60; m += 15) {
-          if (h === gridEndHour && m > 0) continue; // max time is 24:00
-
-          const key = `${day}_${h * 60 + m}`;
-          const busyMembers = slots[key] || [];
-          const freeMembers = allMemberNames.filter(name => !busyMembers.includes(name));
-          
-          // Only show blocks where at least 1 person is free
-          if (freeMembers.length > 0 && h < gridEndHour) {
-            // Check if freeMembers array is exactly the same as current
-            const isSame = currentFreeMembers.length === freeMembers.length && currentFreeMembers.every(val => freeMembers.includes(val));
-            
-            if (!isSame) {
-              // End current block if exists
-              if (currentStartMins !== null) {
-                const startStr = `${String(Math.floor(currentStartMins / 60)).padStart(2, '0')}:${String(currentStartMins % 60).padStart(2, '0')}`;
-                const endStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                
-                heatmapBlocks.push({
-                  id: `hm_${blockIdCounter++}`,
-                  title: `${currentFreeMembers.length}명 비어있음\n\n[가능한 멤버]\n${currentFreeMembers.join(', ')}`,
-                  isHeatmap: true,
-                  opacity: currentFreeMembers.length / totalMembers,
-                  timeSlots: [{ id: 'ts1', dayOfWeek: day, startTime: startStr, endTime: endStr }]
-                });
-              }
-              currentStartMins = h * 60 + m;
-              currentFreeMembers = freeMembers;
-            }
-          } else {
-            // End current block
-            if (currentStartMins !== null) {
-              const endStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-              const startStr = `${String(Math.floor(currentStartMins / 60)).padStart(2, '0')}:${String(currentStartMins % 60).padStart(2, '0')}`;
-              
-              heatmapBlocks.push({
-                id: `hm_${blockIdCounter++}`,
-                title: `${currentFreeMembers.length}명 비어있음\n\n[가능한 멤버]\n${currentFreeMembers.join(', ')}`,
-                isHeatmap: true,
-                opacity: currentFreeMembers.length / totalMembers,
-                timeSlots: [{ id: 'ts1', dayOfWeek: day, startTime: startStr, endTime: endStr }]
-              });
-              currentStartMins = null;
-              currentFreeMembers = [];
-            }
-          }
-        }
-      }
-    });
-
-    return heatmapBlocks;
+    return allBlocks;
   }, [activeMemberId, activeRoom]);
 
   const renderMemberSchedule = () => {
@@ -260,10 +184,10 @@ export function ScheduleView() {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: isOwner ? 'var(--text-main)' : '#94a3b8' }} />
+                  <div style={{ width: '6px', height: '6px', borderRadius: '50%', border: '1px solid var(--border-main)', backgroundColor: isOwner ? 'var(--border-main)' : 'transparent' }} />
                   {memberInfo.name}
-                  {isOwner && <span style={{ fontSize: '0.7rem', backgroundColor: 'var(--text-main)', color: 'white', padding: '0.1rem 0.3rem', borderRadius: '0px' }}>방장</span>}
-                  {mId === user.uid && <span style={{ fontSize: '0.7rem', backgroundColor: '#e2e8f0', color: '#475569', padding: '0.1rem 0.3rem', borderRadius: '0px' }}>나</span>}
+                  {isOwner && <span style={{ fontSize: '0.7rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.1rem 0.35rem', fontWeight: 'bold' }}>방장</span>}
+                  {mId === user.uid && <span style={{ fontSize: '0.7rem', backgroundColor: 'white', color: 'var(--text-main)', border: '1.5px solid var(--border-main)', padding: '0.1rem 0.35rem', fontWeight: 'bold' }}>나</span>}
                 </div>
               </div>
             );
@@ -285,11 +209,11 @@ export function ScheduleView() {
         <div style={{ padding: '1.5rem 2rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--bg-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ margin: '0 0 0.5rem 0', fontWeight: '900', fontSize: '1.5rem' }}>
-              {activeMemberId === '__all__' ? '전체 멤버 겹쳐보기 (히트맵)' : `${activeRoom.memberDetails?.[activeMemberId]?.name || '알 수 없음'}님의 시간표`}
+              {activeMemberId === '__all__' ? '전체 멤버 일정 모아보기' : `${activeRoom.memberDetails?.[activeMemberId]?.name || '알 수 없음'}님의 시간표`}
             </h2>
-            <p style={{ margin: 0, color: 'var(--text-muted)', fontWeight: 'bold' }}>
+            <p style={{ margin: 0, color: 'var(--text-main)', fontWeight: 'bold' }}>
               {activeMemberId === '__all__' 
-                ? '가장 색이 진한 시간이 멤버들이 가장 많이 비어있는 시간입니다!'
+                ? '모든 멤버의 공유된 일정이 함께 표시됩니다.'
                 : '공유를 허용한 일정만 표시됩니다.'}
             </p>
           </div>

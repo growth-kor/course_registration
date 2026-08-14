@@ -162,7 +162,7 @@ export function PostDetail({
           {selectedPost.title}
         </h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#64748b', fontWeight: 'bold' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-main)', fontWeight: 'bold' }}>
             <span>작성자: {selectedPost.authorName}</span>
             <span>•</span>
             <span>{new Date(selectedPost.createdAt).toLocaleString()}</span>
@@ -298,7 +298,7 @@ export function PostDetail({
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: '900' }}>{comment.authorName}</div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>{new Date(comment.createdAt).toLocaleString()}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 'bold' }}>{new Date(comment.createdAt).toLocaleString()}</span>
                     {comment.authorId === user.uid && (
                       <button 
                         onClick={() => handleDeleteComment(comment.id)}

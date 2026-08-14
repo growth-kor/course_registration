@@ -180,20 +180,20 @@ function SharedSpaceContent() {
                           onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-hard-sm)'; }}
                         >
                           {room.isPublic && (
-                            <div style={{ position: 'absolute', top: '-12px', right: '-12px', backgroundColor: 'var(--text-main)', color: '#ffffff', border: '2px solid var(--border-main)', padding: '0.2rem 0.5rem', fontWeight: '900', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '2px 2px 0 var(--border-main)' }}>
-                              <Globe size={14} /> PUBLIC
+                            <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: 'white', color: 'var(--text-main)', border: '2px solid var(--border-main)', padding: '0.15rem 0.4rem', fontWeight: '900', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '2px 2px 0 var(--border-main)' }}>
+                              <Globe size={13} /> PUBLIC
                             </div>
                           )}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
                               {!room.themeImageUrl && (room.name ? room.name.substring(0,2) : '방')}
                             </div>
                             <div style={{ overflow: 'hidden' }}>
                               <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
-                              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 'bold' }}>{room.memberIds?.length || 0}명 참여 중</p>
+                              <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 'bold' }}>{room.memberIds?.length || 0}명 참여 중</p>
                             </div>
                           </div>
-                          <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: '#475569', lineHeight: '1.5', height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                          <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                             {room.description || '소개글이 없습니다.'}
                           </p>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f8fafc', padding: '0.5rem', border: '2px solid var(--border-main)' }} onClick={e => e.stopPropagation()}>
@@ -251,18 +251,18 @@ function SharedSpaceContent() {
                           boxShadow: 'var(--shadow-hard-sm)'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
-                            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.5rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.5rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
                               {!room.themeImageUrl && (room.name ? room.name.substring(0,2) : '방')}
                             </div>
                             <div style={{ flex: 1 }}>
                               <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{room.name}</h3>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 'bold' }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} /> {room.memberIds?.length || 0}명</span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Hash size={14} /> {room.inviteCode}</span>
                               </div>
                             </div>
                           </div>
-                          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem', color: '#475569', lineHeight: '1.5', flex: 1 }}>
+                          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', flex: 1 }}>
                             {room.description || '소개글이 없습니다.'}
                           </p>
                           <button 
@@ -304,15 +304,15 @@ function SharedSpaceContent() {
               </button>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#f1f5f9', color: 'var(--text-main)', border: '2px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1rem', backgroundImage: activeRoom.themeImageUrl ? `url(${activeRoom.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '2px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1rem', backgroundImage: activeRoom.themeImageUrl ? `url(${activeRoom.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
                   {!activeRoom.themeImageUrl && (activeRoom.name ? activeRoom.name.substring(0,2) : '방')}
                 </div>
                 <div>
                   <h2 style={{ margin: '0 0 0.2rem 0', fontWeight: '900', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {activeRoom.name}
-                    {activeRoom.isPublic && <span style={{ backgroundColor: 'var(--text-main)', color: '#ffffff', fontSize: '0.7rem', padding: '0.2rem 0.4rem', border: '1px solid var(--border-main)', display: 'inline-flex', alignItems: 'center', gap: '0.1rem' }}><Globe size={12}/>공개</span>}
+                    {activeRoom.isPublic && <span style={{ backgroundColor: 'white', color: 'var(--text-main)', fontSize: '0.7rem', padding: '0.1rem 0.4rem', border: '1.5px solid var(--border-main)', display: 'inline-flex', alignItems: 'center', gap: '0.15rem', fontWeight: 'bold' }}><Globe size={12}/>공개</span>}
                   </h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-main)', fontSize: '0.85rem', fontWeight: 'bold' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Hash size={14} /> {activeRoom.inviteCode}</span>
                     <span 
                       style={{ color: 'var(--text-main)', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
