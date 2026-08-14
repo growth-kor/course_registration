@@ -68,39 +68,49 @@ function SharedSpaceContent() {
         // DASHBOARD VIEW
         <div className="dashboard-view" style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 2rem', backgroundColor: 'white', borderBottom: '2px solid var(--border-main)', flexWrap: 'wrap', gap: '1rem' }}>
-            <h1 style={{ margin: 0, fontWeight: '900', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Users size={28} /> 공유 시간표 대시보드
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
+              <h1 style={{ margin: 0, fontWeight: '900', fontSize: '1.45rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Users size={26} /> {t('dashboard_title')}
+              </h1>
+              
+              <div style={{ display: 'flex', gap: '0.4rem', backgroundColor: '#f1f5f9', padding: '0.3rem', border: '2px solid var(--border-main)' }}>
+                <button 
+                  className="btn"
+                  onClick={() => setSidebarTab('my_rooms')}
+                  style={{ 
+                    padding: '0.35rem 0.8rem', 
+                    fontWeight: '900',
+                    fontSize: '0.88rem',
+                    backgroundColor: sidebarTab === 'my_rooms' ? 'var(--text-main)' : 'transparent',
+                    color: sidebarTab === 'my_rooms' ? 'white' : 'var(--text-main)',
+                    border: 'none',
+                    boxShadow: 'none',
+                    transform: 'none'
+                  }}
+                >
+                  <Users size={15} style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} /> {t('my_rooms')}
+                </button>
+                
+                <button 
+                  className="btn"
+                  onClick={() => setSidebarTab('explore')}
+                  style={{ 
+                    padding: '0.35rem 0.8rem', 
+                    fontWeight: '900',
+                    fontSize: '0.88rem',
+                    backgroundColor: sidebarTab === 'explore' ? 'var(--text-main)' : 'transparent',
+                    color: sidebarTab === 'explore' ? 'white' : 'var(--text-main)',
+                    border: 'none',
+                    boxShadow: 'none',
+                    transform: 'none'
+                  }}
+                >
+                  <Globe size={15} style={{ marginRight: '0.35rem', verticalAlign: 'middle' }} /> {t('explore')}
+                </button>
+              </div>
+            </div>
 
             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <button 
-                className="btn"
-                onClick={() => setSidebarTab('my_rooms')}
-                style={{ 
-                  padding: '0.45rem 0.9rem', 
-                  fontWeight: 'bold',
-                  backgroundColor: sidebarTab === 'my_rooms' ? '#f1f5f9' : 'white',
-                  boxShadow: sidebarTab === 'my_rooms' ? 'none' : 'var(--shadow-hard-sm)', 
-                  transform: sidebarTab === 'my_rooms' ? 'translate(2px, 2px)' : 'none' 
-                }}
-              >
-                <Users size={16} /> {t('my_rooms')}
-              </button>
-              
-              <button 
-                className="btn"
-                onClick={() => setSidebarTab('explore')}
-                style={{ 
-                  padding: '0.45rem 0.9rem', 
-                  fontWeight: 'bold',
-                  backgroundColor: sidebarTab === 'explore' ? '#f1f5f9' : 'white',
-                  boxShadow: sidebarTab === 'explore' ? 'none' : 'var(--shadow-hard-sm)', 
-                  transform: sidebarTab === 'explore' ? 'translate(2px, 2px)' : 'none' 
-                }}
-              >
-                <Globe size={16} /> {t('explore')}
-              </button>
-
               <button 
                 className="btn btn-primary" 
                 onClick={() => {
@@ -143,7 +153,7 @@ function SharedSpaceContent() {
               {sidebarTab === 'my_rooms' ? (
                 <>
                   <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    내 소속 방 <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>({rooms.length})</span>
+                    {t('my_rooms')} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>({rooms.length})</span>
                   </h2>
                   {loading ? (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', fontWeight: '900', fontSize: '1.2rem', color: 'var(--text-main)', border: '3px solid var(--border-main)', backgroundColor: 'white', boxShadow: 'var(--shadow-hard-sm)' }}>[ 데이터를 불러오는 중... ]</div>
@@ -154,56 +164,63 @@ function SharedSpaceContent() {
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                      {rooms.map(room => (
-                        <div 
-                          key={room.id}
-                          onClick={() => setActiveRoom(room)}
-                          className="room-card"
-                          style={{
-                            backgroundColor: 'white',
-                            border: '3px solid var(--border-main)',
-                            padding: '1.5rem',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            transition: 'all 0.2s',
-                            boxShadow: 'var(--shadow-hard-sm)'
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-4px, -4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-hard)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-hard-sm)'; }}
-                        >
-                          {room.isPublic && (
-                            <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: 'white', color: 'var(--text-main)', border: '2px solid var(--border-main)', padding: '0.15rem 0.4rem', fontWeight: '900', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '2px 2px 0 var(--border-main)' }}>
-                              <Globe size={13} /> PUBLIC
+                      {rooms.map(room => {
+                        const ownerName = room.memberDetails?.[room.ownerId]?.name || '방장';
+                        return (
+                          <div 
+                            key={room.id}
+                            onClick={() => setActiveRoom(room)}
+                            className="room-card"
+                            style={{
+                              backgroundColor: 'white',
+                              border: '3px solid var(--border-main)',
+                              padding: '1.5rem',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              transition: 'all 0.2s',
+                              boxShadow: 'var(--shadow-hard-sm)'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-4px, -4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-hard)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-hard-sm)'; }}
+                          >
+                            {room.isPublic && (
+                              <div style={{ position: 'absolute', top: '-10px', right: '-10px', backgroundColor: 'white', color: 'var(--text-main)', border: '2px solid var(--border-main)', padding: '0.15rem 0.4rem', fontWeight: '900', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '2px 2px 0 var(--border-main)' }}>
+                                <Globe size={13} /> PUBLIC
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.85rem' }}>
+                              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                                {!room.themeImageUrl && (room.isPublic ? <Globe size={24} /> : <Lock size={24} />)}
+                              </div>
+                              <div style={{ overflow: 'hidden' }}>
+                                <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-main)', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                  <span>👑 {ownerName}</span>
+                                  <span>·</span>
+                                  <span>{room.memberIds?.length || 0}명 참여 중</span>
+                                </div>
+                              </div>
                             </div>
-                          )}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.2rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                              {!room.themeImageUrl && (room.isPublic ? <Globe size={24} /> : <Lock size={24} />)}
-                            </div>
-                            <div style={{ overflow: 'hidden' }}>
-                              <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
-                              <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 'bold' }}>{room.memberIds?.length || 0}명 참여 중</p>
+                            <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {room.description || '소개글이 없습니다.'}
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f8fafc', padding: '0.5rem', border: '2px solid var(--border-main)' }} onClick={e => e.stopPropagation()}>
+                              <Key size={16} />
+                              <span style={{ fontWeight: 'bold', flex: 1, fontFamily: 'monospace', fontSize: '1.1rem', letterSpacing: '2px' }}>{room.inviteCode}</span>
+                              <button 
+                                className="btn btn-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(room.inviteCode);
+                                  alert(t('copied'));
+                                }}
+                              >
+                                {t('copy_code')}
+                              </button>
                             </div>
                           </div>
-                          <p style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                            {room.description || '소개글이 없습니다.'}
-                          </p>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f8fafc', padding: '0.5rem', border: '2px solid var(--border-main)' }} onClick={e => e.stopPropagation()}>
-                            <Key size={16} />
-                            <span style={{ fontWeight: 'bold', flex: 1, fontFamily: 'monospace', fontSize: '1.1rem', letterSpacing: '2px' }}>{room.inviteCode}</span>
-                            <button 
-                              className="btn btn-sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigator.clipboard.writeText(room.inviteCode);
-                                alert("초대 코드가 복사되었습니다!");
-                              }}
-                            >
-                              복사
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>
@@ -211,7 +228,7 @@ function SharedSpaceContent() {
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h2 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Globe size={24} /> 탐색 (공개 방)
+                      <Globe size={24} /> {t('explore_rooms')}
                     </h2>
                     <div style={{ position: 'relative' }}>
                       <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -233,45 +250,61 @@ function SharedSpaceContent() {
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                      {publicRooms.map(room => (
-                        <div key={room.id} style={{
-                          backgroundColor: 'white',
-                          border: '3px solid var(--border-main)',
-                          padding: '1.5rem',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          boxShadow: 'var(--shadow-hard-sm)'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
-                            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.5rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                              {!room.themeImageUrl && <Globe size={28} />}
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem' }}>{room.name}</h3>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Users size={14} /> {room.memberIds?.length || 0}명</span>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Hash size={14} /> {room.inviteCode}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', flex: 1 }}>
-                            {room.description || '소개글이 없습니다.'}
-                          </p>
-                          <button 
-                            className="btn btn-primary"
+                      {publicRooms.map(room => {
+                        const ownerName = room.memberDetails?.[room.ownerId]?.name || '방장';
+                        const isJoined = !!rooms.find(r => r.id === room.id);
+
+                        return (
+                          <div 
+                            key={room.id}
                             onClick={() => {
-                              if (rooms.find(r => r.id === room.id)) {
+                              if (isJoined) {
                                 setActiveRoom(rooms.find(r => r.id === room.id));
                               } else {
                                 setActiveRoom({ ...room, isPreview: true });
                               }
                             }}
-                            style={{ width: '100%', fontWeight: 'bold' }}
+                            className="room-card"
+                            style={{
+                              backgroundColor: 'white',
+                              border: '3px solid var(--border-main)',
+                              padding: '1.5rem',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              cursor: 'pointer',
+                              boxShadow: 'var(--shadow-hard-sm)',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-4px, -4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-hard)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-hard-sm)'; }}
                           >
-                            {rooms.find(r => r.id === room.id) ? '방으로 이동' : '참여하기'}
-                          </button>
-                        </div>
-                      ))}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '0.85rem' }}>
+                              <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'white', color: 'var(--text-main)', border: '3px solid var(--border-main)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '1.5rem', flexShrink: 0, backgroundImage: room.themeImageUrl ? `url(${room.themeImageUrl})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                                {!room.themeImageUrl && <Globe size={28} />}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h3 style={{ margin: '0 0 0.25rem 0', fontWeight: '900', fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{room.name}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-main)', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                                  <span>👑 {ownerName}</span>
+                                  <span>·</span>
+                                  <span><Users size={13} style={{ verticalAlign: 'middle' }} /> {room.memberIds?.length || 0}명</span>
+                                  <span>·</span>
+                                  <span>#{room.inviteCode}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.5', flex: 1, height: '2.85rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {room.description || '소개글이 없습니다.'}
+                            </p>
+                            <button 
+                              className="btn btn-primary"
+                              style={{ width: '100%', fontWeight: 'bold' }}
+                            >
+                              {isJoined ? '방으로 이동' : '둘러보기 / 이동'}
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </>

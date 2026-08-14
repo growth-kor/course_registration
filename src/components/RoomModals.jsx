@@ -134,6 +134,7 @@ export function RoomModals({
   const [settingsImageFile, setSettingsImageFile] = useState(null);
   const [settingsImagePreview, setSettingsImagePreview] = useState(null);
   const [settingsImageUrl, setSettingsImageUrl] = useState('');
+  const [settingsAllowGuestView, setSettingsAllowGuestView] = useState(true);
   const [isUploadingRoomImage, setIsUploadingRoomImage] = useState(false);
 
   // Initialize form state when modal opens
@@ -144,6 +145,7 @@ export function RoomModals({
       setSettingsImageFile(null);
       setSettingsImageUrl(activeRoom.themeImageUrl || '');
       setSettingsImagePreview(activeRoom.themeImageUrl || null);
+      setSettingsAllowGuestView(activeRoom.allowGuestView !== false);
     }
   }, [showRoomSettingsModal, activeRoom?.id]);
 
@@ -176,7 +178,8 @@ export function RoomModals({
     const updates = {
       name: settingsName.trim(),
       description: settingsDesc.trim(),
-      themeImageUrl
+      themeImageUrl,
+      allowGuestView: settingsAllowGuestView
     };
     const success = await updateRoomInfo(activeRoom.id, updates);
     if (success) {
@@ -444,6 +447,21 @@ export function RoomModals({
                       style={{ flex: 1, fontSize: '0.85rem', padding: '0.4rem 0.7rem' }}
                     />
                   </div>
+                </div>
+
+                <div style={{ padding: '0.75rem', backgroundColor: '#f8fafc', border: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                    <input 
+                      type="checkbox"
+                      checked={settingsAllowGuestView}
+                      onChange={e => setSettingsAllowGuestView(e.target.checked)}
+                      style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    비회원/미참여자의 시간표 & 게시판 탐색 허용
+                  </label>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1.5rem' }}>
+                    체크 해제 시 방에 참여한 정회원만 시간표와 게시판을 열람할 수 있습니다.
+                  </p>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-main)' }}>

@@ -70,8 +70,8 @@ export function ScheduleView() {
 
   if (!activeRoom) return null;
 
-  // Preview mode: non-member browsing a public room
-  if (activeRoom.isPreview) {
+  // Preview mode: non-member browsing a room where allowGuestView is explicitly turned off
+  if (activeRoom.isPreview && activeRoom.allowGuestView === false) {
     return (
       <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', padding: '3rem', textAlign: 'center' }}>
         <Users size={56} style={{ opacity: 0.25 }} />

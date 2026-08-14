@@ -57,7 +57,7 @@ export const translations = {
     // Shared Space
     dashboard: '대시보드',
     dashboard_title: '공유 시간표 대시보드',
-    my_rooms: '내 공유 방',
+    my_rooms: '내 소속 방',
     explore_rooms: '탐색 (공개 방)',
     create_room: '새로운 방 만들기',
     join_with_code: '코드로 참여하기',
