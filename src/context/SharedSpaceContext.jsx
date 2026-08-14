@@ -73,8 +73,8 @@ export function SharedSpaceProvider({
     
     if (matchedRoom) {
       setActiveRoom(matchedRoom);
-    } else if (userRooms.length > 0 && !activeRoom) {
-      setActiveRoom(userRooms[0]);
+    } else {
+      setActiveRoom(null);
     }
     setLoading(false);
   };
@@ -113,6 +113,8 @@ export function SharedSpaceProvider({
       localStorage.setItem(`last_visited_${activeRoom.id}`, new Date().toISOString());
       // Default to current user's own schedule; fallback to owner if user is not a member
       setActiveMemberId(user?.uid || activeRoom.ownerId);
+    } else {
+      sessionStorage.removeItem('activeRoomId');
     }
   }, [activeRoom]);
 
