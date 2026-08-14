@@ -6,15 +6,15 @@ import { WeeklyGrid } from './WeeklyGrid';
 export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpenProfileSettings }) {
   const [rooms, setRooms] = useState([]);
   const [publicRooms, setPublicRooms] = useState([]);
-  const [sidebarTab, setSidebarTab] = useState('my_rooms'); // 'my_rooms' or 'explore'
+  const [sidebarTab, setSidebarTab] = useState(() => sessionStorage.getItem('sidebarTab') || 'my_rooms'); // 'my_rooms' or 'explore'
   const [loading, setLoading] = useState(true);
   const [loadingExplore, setLoadingExplore] = useState(false);
   const [activeRoom, setActiveRoom] = useState(null);
   const [activeMemberId, setActiveMemberId] = useState(null);
   const [memberScheduleData, setMemberScheduleData] = useState(null);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
-  const [roomTab, setRoomTab] = useState('schedule'); // 'schedule' or 'board'
-  const [boardView, setBoardView] = useState('list'); // 'list' | 'write' | 'detail'
+  const [roomTab, setRoomTab] = useState(() => sessionStorage.getItem('roomTab') || 'schedule'); // 'schedule' or 'board'
+  const [boardView, setBoardView] = useState(() => sessionStorage.getItem('boardView') || 'list'); // 'list' | 'write' | 'detail'
   const [selectedPost, setSelectedPost] = useState(null);
   const [posts, setPosts] = useState([]);
   const [newPostTitle, setNewPostTitle] = useState('');
@@ -57,7 +57,13 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
     setLoading(true);
     const userRooms = await fetchRoomsForUser(user.uid);
     setRooms(userRooms);
-    if (userRooms.length > 0 && !activeRoom) {
+    
+    const storedRoomId = sessionStorage.getItem('activeRoomId');
+    const matchedRoom = storedRoomId ? userRooms.find(r => r.id === storedRoomId) : null;
+    
+    if (matchedRoom) {
+      setActiveRoom(matchedRoom);
+    } else if (userRooms.length > 0 && !activeRoom) {
       setActiveRoom(userRooms[0]);
     }
     setLoading(false);
@@ -82,7 +88,21 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   const [selectedPlanId, setSelectedPlanId] = useState(''); // NEW
 
   useEffect(() => {
+    sessionStorage.setItem('sidebarTab', sidebarTab);
+  }, [sidebarTab]);
+
+  useEffect(() => {
+    sessionStorage.setItem('roomTab', roomTab);
+  }, [roomTab]);
+
+  useEffect(() => {
+    sessionStorage.setItem('boardView', boardView);
+  }, [boardView]);
+
+  useEffect(() => {
     if (activeRoom) {
+      sessionStorage.setItem('activeRoomId', activeRoom.id);
+      
       // Set last visited time
       localStorage.setItem(`last_visited_${activeRoom.id}`, new Date().toISOString());
       

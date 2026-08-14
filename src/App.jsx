@@ -37,7 +37,11 @@ export default function App() {
     handleLogout
   } = useSchedule();
 
-  const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'shared'
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('activeTab') || 'personal'); // 'personal' or 'shared'
+
+  React.useEffect(() => {
+    sessionStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   // Dark Mode State
   const [isDarkMode, setIsDarkMode] = useState(() => {
