@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchRoomsForUser, fetchPublicRooms, loadScheduleFromFirestore, fetchPosts, fetchComments, incrementPostView } from '../firebase/config';
+import { fetchRoomsForUser, fetchPublicRooms, fetchRoomById, loadScheduleFromFirestore, fetchPosts, fetchComments, incrementPostView } from '../firebase/config';
 
 const SharedSpaceContext = createContext();
 
@@ -25,7 +25,7 @@ export function SharedSpaceProvider({
   const [loading, setLoading] = useState(true);
   const [loadingExplore, setLoadingExplore] = useState(false);
   const [activeRoom, setActiveRoom] = useState(null);
-  const [activeMemberId, setActiveMemberId] = useState(null);
+  const [activeMemberId, setActiveMemberId] = useState(() => sessionStorage.getItem('activeMemberId') || null);
   const [memberScheduleData, setMemberScheduleData] = useState(null);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [roomTab, setRoomTab] = useState(() => sessionStorage.getItem('roomTab') || 'schedule'); // 'schedule' or 'board'
@@ -59,8 +59,16 @@ export function SharedSpaceProvider({
   }, [plans]);
 
   const loadRooms = async () => {
+    const storedRoomId = sessionStorage.getItem('activeRoomId');
     if (!user) {
       setRooms([]);
+      if (storedRoomId) {
+        // Preview mode room fetch
+        const rData = await fetchRoomById(storedRoomId);
+        if (rData) {
+          setActiveRoom({ ...rData, isPreview: true });
+        }
+      }
       setLoading(false);
       return;
     }
@@ -68,13 +76,18 @@ export function SharedSpaceProvider({
     const userRooms = await fetchRoomsForUser(user.uid);
     setRooms(userRooms);
     
-    const storedRoomId = sessionStorage.getItem('activeRoomId');
-    const matchedRoom = storedRoomId ? userRooms.find(r => r.id === storedRoomId) : null;
-    
-    if (matchedRoom) {
-      setActiveRoom(matchedRoom);
-    } else {
-      setActiveRoom(null);
+    if (storedRoomId) {
+      const matchedRoom = userRooms.find(r => r.id === storedRoomId);
+      if (matchedRoom) {
+        setActiveRoom(matchedRoom);
+      } else {
+        const rData = await fetchRoomById(storedRoomId);
+        if (rData) {
+          setActiveRoom({ ...rData, isPreview: true });
+        } else {
+          setActiveRoom(null);
+        }
+      }
     }
     setLoading(false);
   };
@@ -108,13 +121,27 @@ export function SharedSpaceProvider({
   }, [boardView]);
 
   useEffect(() => {
+    if (activeMemberId) {
+      sessionStorage.setItem('activeMemberId', activeMemberId);
+    } else {
+      sessionStorage.removeItem('activeMemberId');
+    }
+  }, [activeMemberId]);
+
+  useEffect(() => {
     if (activeRoom) {
       sessionStorage.setItem('activeRoomId', activeRoom.id);
       localStorage.setItem(`last_visited_${activeRoom.id}`, new Date().toISOString());
-      // Default to current user's own schedule; fallback to owner if user is not a member
-      setActiveMemberId(user?.uid || activeRoom.ownerId);
+      
+      const storedMemberId = sessionStorage.getItem('activeMemberId');
+      if (storedMemberId && (activeRoom.memberIds?.includes(storedMemberId) || storedMemberId === '__all__')) {
+        setActiveMemberId(storedMemberId);
+      } else {
+        setActiveMemberId(user?.uid || activeRoom.ownerId);
+      }
     } else {
       sessionStorage.removeItem('activeRoomId');
+      sessionStorage.removeItem('activeMemberId');
     }
   }, [activeRoom]);
 

@@ -349,6 +349,23 @@ export async function fetchRoomsForUser(userId) {
   }
 }
 
+export async function fetchRoomById(roomId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId) return null;
+
+  try {
+    const roomRef = doc(db, 'rooms', roomId);
+    const roomSnap = await getDoc(roomRef);
+    if (roomSnap.exists()) {
+      return { id: roomSnap.id, ...roomSnap.data() };
+    }
+    return null;
+  } catch (e) {
+    console.error("Error fetching room by id:", e);
+    return null;
+  }
+}
+
 export async function fetchPublicRooms() {
   const { isConfigured, db } = initFirebase();
   if (!isConfigured || !db) return [];
