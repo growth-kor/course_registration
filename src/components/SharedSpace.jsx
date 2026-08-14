@@ -247,7 +247,7 @@ function SharedSpaceContent() {
                       <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>첫 번째 공개방의 주인이 되어보세요!</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                       {publicRooms.map(room => {
                         const ownerName = room.memberDetails?.[room.ownerId]?.name || '방장';
                         const isJoined = !!rooms.find(r => r.id === room.id);

@@ -204,7 +204,6 @@ export function RoomModals({
                   className="input-field" 
                   value={newRoomName}
                   onChange={e => setNewRoomName(e.target.value)}
-                  placeholder="예: 멋쟁이 사자처럼 11기"
                   autoFocus
                 />
               </div>
