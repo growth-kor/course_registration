@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Trash2, Send, Calendar } from 'lucide-react';
-import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, fetchPosts, addPost, deletePost } from '../firebase/config';
+import { Users, Search, Plus, Key, Loader, Globe, Lock, Hash, MessageSquare, Trash2, Send, Calendar, Edit2, ThumbsUp, Eye } from 'lucide-react';
+import { fetchRoomsForUser, fetchPublicRooms, createRoom, joinRoomByCode, loadScheduleFromFirestore, updateMemberSharedPlan, removeMember, transferOwnership, deleteRoom, fetchPosts, addPost, deletePost, updatePost, incrementPostView, togglePostLike, fetchComments, addComment, deleteComment } from '../firebase/config';
 import { WeeklyGrid } from './WeeklyGrid';
 
 export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpenProfileSettings }) {
@@ -21,6 +21,11 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostCategory, setNewPostCategory] = useState('일반');
   const [loadingPosts, setLoadingPosts] = useState(false);
+  const [editPostId, setEditPostId] = useState(null);
+  const [postComments, setPostComments] = useState([]);
+  const [newCommentContent, setNewCommentContent] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [viewedPosts] = useState(() => new Set());
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -116,17 +121,94 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
     }
   }, [activeRoom, roomTab]);
 
+  const handleSelectPost = async (post) => {
+    setSelectedPost(post);
+    setBoardView('detail');
+    setLoadingComments(true);
+    const comments = await fetchComments(activeRoom.id, post.id);
+    setPostComments(comments);
+    setLoadingComments(false);
+
+    if (!viewedPosts.has(post.id)) {
+      viewedPosts.add(post.id);
+      const success = await incrementPostView(activeRoom.id, post.id);
+      if (success) {
+        setSelectedPost(prev => ({ ...prev, views: (prev.views || 0) + 1 }));
+        setPosts(prevPosts => prevPosts.map(p => p.id === post.id ? { ...p, views: (p.views || 0) + 1 } : p));
+      }
+    }
+  };
+
   const handleAddPost = async () => {
     if ((!newPostTitle.trim() && !newPostContent.trim()) || !activeRoom) return;
-    const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostCategory, newPostTitle.trim(), newPostContent.trim());
-    if (post) {
-      setNewPostTitle('');
-      setNewPostContent('');
-      setNewPostCategory('일반');
-      setBoardView('list');
-      loadPosts();
+    
+    if (editPostId) {
+      const success = await updatePost(activeRoom.id, editPostId, newPostCategory, newPostTitle.trim(), newPostContent.trim());
+      if (success) {
+        setEditPostId(null);
+        setNewPostTitle('');
+        setNewPostContent('');
+        setNewPostCategory('일반');
+        setBoardView('list');
+        loadPosts();
+      } else {
+        alert("글 수정에 실패했습니다.");
+      }
     } else {
-      alert("글 작성에 실패했습니다.");
+      const post = await addPost(activeRoom.id, user.uid, user.displayName || '이름 없음', newPostCategory, newPostTitle.trim(), newPostContent.trim());
+      if (post) {
+        setNewPostTitle('');
+        setNewPostContent('');
+        setNewPostCategory('일반');
+        setBoardView('list');
+        loadPosts();
+      } else {
+        alert("글 작성에 실패했습니다.");
+      }
+    }
+  };
+
+  const handleEditClick = (post) => {
+    setEditPostId(post.id);
+    setNewPostTitle(post.title || '');
+    setNewPostContent(post.content || '');
+    setNewPostCategory(post.category || '일반');
+    setBoardView('write');
+  };
+
+  const handleLikePost = async () => {
+    if (!activeRoom || !selectedPost) return;
+    const result = await togglePostLike(activeRoom.id, selectedPost.id, user.uid);
+    if (result !== false) {
+      const newLikes = result.liked 
+        ? [...(selectedPost.likes || []), user.uid] 
+        : (selectedPost.likes || []).filter(id => id !== user.uid);
+      
+      setSelectedPost(prev => ({ ...prev, likes: newLikes }));
+      setPosts(prevPosts => prevPosts.map(p => p.id === selectedPost.id ? { ...p, likes: newLikes } : p));
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!activeRoom || !selectedPost || !newCommentContent.trim()) return;
+    const comment = await addComment(activeRoom.id, selectedPost.id, user.uid, user.displayName || '이름 없음', newCommentContent.trim());
+    if (comment) {
+      setNewCommentContent('');
+      setPostComments(prev => [...prev, comment]);
+      setPosts(prevPosts => prevPosts.map(p => p.id === selectedPost.id ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p));
+      setSelectedPost(prev => ({ ...prev, commentCount: (prev.commentCount || 0) + 1 }));
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!activeRoom || !selectedPost) return;
+    if (window.confirm("댓글을 삭제하시겠습니까?")) {
+      const success = await deleteComment(activeRoom.id, selectedPost.id, commentId);
+      if (success) {
+        setPostComments(prev => prev.filter(c => c.id !== commentId));
+        setPosts(prevPosts => prevPosts.map(p => p.id === selectedPost.id ? { ...p, commentCount: Math.max(0, (p.commentCount || 0) - 1) } : p));
+        setSelectedPost(prev => ({ ...prev, commentCount: Math.max(0, (prev.commentCount || 0) - 1) }));
+      }
     }
   };
 
@@ -136,6 +218,10 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
       const success = await deletePost(activeRoom.id, postId);
       if (success) {
         loadPosts();
+        if (selectedPost && selectedPost.id === postId) {
+          setBoardView('list');
+          setSelectedPost(null);
+        }
       } else {
         alert("글 삭제에 실패했습니다.");
       }
@@ -599,7 +685,9 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                                   <th style={{ padding: '1rem', width: '80px', borderRight: '2px solid var(--border-main)' }}>분류</th>
                                   <th style={{ padding: '1rem', textAlign: 'left' }}>제목</th>
                                   <th style={{ padding: '1rem', width: '120px', borderLeft: '2px solid var(--border-main)' }}>글쓴이</th>
-                                  <th style={{ padding: '1rem', width: '160px', borderLeft: '2px solid var(--border-main)' }}>날짜</th>
+                                  <th style={{ padding: '1rem', width: '120px', borderLeft: '2px solid var(--border-main)' }}>날짜</th>
+                                  <th style={{ padding: '1rem', width: '80px', borderLeft: '2px solid var(--border-main)' }}>조회</th>
+                                  <th style={{ padding: '1rem', width: '80px', borderLeft: '2px solid var(--border-main)' }}>추천</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -621,12 +709,19 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                                       </td>
                                       <td style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
                                         {post.title || '(제목 없음)'}
+                                        {post.commentCount > 0 && <span style={{ color: '#ef4444', marginLeft: '0.5rem', fontSize: '0.9rem' }}>[{post.commentCount}]</span>}
                                       </td>
                                       <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem' }}>
                                         {post.authorName}
                                       </td>
                                       <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.8rem', color: '#64748b' }}>
-                                        {new Date(post.createdAt).toLocaleDateString()} {new Date(post.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(post.createdAt).toLocaleDateString()}
+                                      </td>
+                                      <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: '#64748b' }}>
+                                        {post.views || 0}
+                                      </td>
+                                      <td style={{ padding: '0.75rem 1rem', borderLeft: '2px solid var(--border-main)', fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                                        {post.likes?.length || 0}
                                       </td>
                                     </tr>
                                   ))
@@ -654,7 +749,7 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                       {boardView === 'write' && (
                         <div style={{ backgroundColor: 'white', border: '2px solid var(--border-main)', boxShadow: 'var(--shadow-hard)', padding: '2.5rem' }}>
                           <h2 style={{ margin: '0 0 1.5rem 0', fontWeight: '900', borderBottom: '2px solid var(--border-main)', paddingBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <MessageSquare size={24} /> 새 글 쓰기
+                            {editPostId ? <><Edit2 size={24} /> 글 수정</> : <><MessageSquare size={24} /> 새 글 쓰기</>}
                           </h2>
                           
                           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
@@ -688,14 +783,26 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                           ></textarea>
                           
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
-                            <button className="btn" style={{ padding: '0.75rem 2rem', backgroundColor: '#f1f5f9', fontWeight: 'bold' }} onClick={() => setBoardView('list')}>취소</button>
+                            <button 
+                              className="btn" 
+                              style={{ padding: '0.75rem 2rem', backgroundColor: '#f1f5f9', fontWeight: 'bold' }} 
+                              onClick={() => {
+                                setBoardView(editPostId ? 'detail' : 'list');
+                                if (!editPostId) {
+                                  setNewPostTitle('');
+                                  setNewPostContent('');
+                                }
+                              }}
+                            >
+                              취소
+                            </button>
                             <button 
                               className="btn btn-primary" 
                               style={{ padding: '0.75rem 2rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }} 
                               onClick={handleAddPost} 
                               disabled={!newPostTitle.trim() && !newPostContent.trim()}
                             >
-                              <Send size={18} /> 등록
+                              {editPostId ? <><Edit2 size={18} /> 수정 완료</> : <><Send size={18} /> 등록</>}
                             </button>
                           </div>
                         </div>
@@ -718,32 +825,110 @@ export function SharedSpace({ user, plans, firebaseStatus, onRequireLogin, onOpe
                                <h2 style={{ margin: 0, fontWeight: '900', fontSize: '1.5rem' }}>{selectedPost.title || '(제목 없음)'}</h2>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569', fontSize: '0.95rem', fontWeight: 'bold' }}>
-                               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={16} /> {selectedPost.authorName}</span>
+                               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={16} /> {selectedPost.authorName}</span>
+                                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Eye size={16} /> {selectedPost.views || 0}</span>
+                                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}><ThumbsUp size={16} /> {selectedPost.likes?.length || 0}</span>
+                               </div>
                                <span>{new Date(selectedPost.createdAt).toLocaleString()}</span>
                             </div>
                           </div>
                           
-                          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.7', minHeight: '250px', fontSize: '1.1rem', color: 'var(--text-main)', padding: '0.5rem' }}>
+                          <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.7', minHeight: '200px', fontSize: '1.1rem', color: 'var(--text-main)', padding: '0.5rem' }}>
                             {selectedPost.content}
                           </div>
-                          
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', paddingTop: '1.5rem', borderTop: '2px solid var(--border-main)' }}>
+
+                          <div style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
                             <button 
-                              onClick={() => { setBoardView('list'); setSelectedPost(null); }} 
+                              onClick={handleLikePost} 
+                              className={`btn ${selectedPost.likes?.includes(user.uid) ? 'btn-primary' : ''}`}
+                              style={{ padding: '0.75rem 2rem', fontWeight: '900', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            >
+                              <ThumbsUp size={20} /> 추천 {selectedPost.likes?.length || 0}
+                            </button>
+                          </div>
+                          
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '2px solid var(--border-main)' }}>
+                            <button 
+                              onClick={() => { setBoardView('list'); setSelectedPost(null); setEditPostId(null); }} 
                               className="btn" 
-                              style={{ padding: '0.5rem 1.5rem', backgroundColor: 'var(--color-primary)', fontWeight: 'bold' }}
+                              style={{ padding: '0.5rem 1.5rem', backgroundColor: 'var(--bg-main)', fontWeight: 'bold' }}
                             >
                               목록으로
                             </button>
                             {(activeRoom.ownerId === user.uid || selectedPost.authorId === user.uid) && (
-                              <button 
-                                onClick={() => handleDeletePost(selectedPost.id)} 
-                                className="btn" 
-                                style={{ padding: '0.5rem 1.5rem', backgroundColor: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                              >
-                                <Trash2 size={16} /> 삭제
-                              </button>
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                {selectedPost.authorId === user.uid && (
+                                  <button 
+                                    onClick={() => handleEditClick(selectedPost)} 
+                                    className="btn" 
+                                    style={{ padding: '0.5rem 1.5rem', backgroundColor: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                  >
+                                    <Edit2 size={16} /> 수정
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeletePost(selectedPost.id)} 
+                                  className="btn" 
+                                  style={{ padding: '0.5rem 1.5rem', backgroundColor: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#ef4444' }}
+                                >
+                                  <Trash2 size={16} /> 삭제
+                                </button>
+                              </div>
                             )}
+                          </div>
+
+                          {/* Comments Section */}
+                          <div style={{ marginTop: '2rem', borderTop: '2px solid var(--border-main)', paddingTop: '2rem' }}>
+                            <h3 style={{ margin: '0 0 1rem 0', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <MessageSquare size={20} /> 댓글 ({postComments.length})
+                            </h3>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+                              {loadingComments ? (
+                                <div style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>댓글 불러오는 중...</div>
+                              ) : postComments.length === 0 ? (
+                                <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', fontWeight: 'bold', border: '2px dashed var(--border-main)' }}>첫 번째 댓글을 남겨보세요!</div>
+                              ) : (
+                                postComments.map(comment => (
+                                  <div key={comment.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem', backgroundColor: '#f8fafc', border: '2px solid var(--border-main)', borderRadius: '4px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <div style={{ fontWeight: '900', color: 'var(--text-main)' }}>{comment.authorName}</div>
+                                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', fontSize: '0.8rem', color: '#64748b' }}>
+                                        <span>{new Date(comment.createdAt).toLocaleString()}</span>
+                                        {(activeRoom.ownerId === user.uid || comment.authorId === user.uid) && (
+                                          <button 
+                                            onClick={() => handleDeleteComment(comment.id)} 
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#ef4444', display: 'flex', alignItems: 'center' }}
+                                          >
+                                            <Trash2 size={14} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', color: 'var(--text-main)' }}>{comment.content}</div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <textarea 
+                                className="input-field" 
+                                placeholder="댓글을 입력하세요..." 
+                                value={newCommentContent}
+                                onChange={e => setNewCommentContent(e.target.value)}
+                                style={{ flex: 1, minHeight: '80px', resize: 'vertical', padding: '0.75rem' }}
+                              />
+                              <button 
+                                className="btn btn-primary" 
+                                onClick={handleAddComment} 
+                                disabled={!newCommentContent.trim()}
+                                style={{ padding: '0 1.5rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}
+                              >
+                                등록
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}

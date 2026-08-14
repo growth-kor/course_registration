@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteDoc, deleteField } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, query, where, getDocs, arrayUnion, arrayRemove, deleteDoc, deleteField, increment } from 'firebase/firestore';
 
 const LOCAL_STORAGE_KEY_FIREBASE_CFG = 'brutalist_planner_firebase_config';
 
@@ -350,3 +350,123 @@ export async function deletePost(roomId, postId) {
   }
 }
 
+export async function updatePost(roomId, postId, category, title, content) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId || !content) return false;
+
+  try {
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    await updateDoc(postRef, {
+      category: category || '일반',
+      title: title || '(제목 없음)',
+      content,
+      updatedAt: new Date().toISOString()
+    });
+    return true;
+  } catch (e) {
+    console.error("Error updating post:", e);
+    return false;
+  }
+}
+
+export async function incrementPostView(roomId, postId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId) return false;
+
+  try {
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    await updateDoc(postRef, {
+      views: increment(1)
+    });
+    return true;
+  } catch (e) {
+    console.error("Error incrementing views:", e);
+    return false;
+  }
+}
+
+export async function togglePostLike(roomId, postId, userId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId || !userId) return false;
+
+  try {
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    const postDoc = await getDoc(postRef);
+    
+    if (postDoc.exists()) {
+      const data = postDoc.data();
+      const likes = data.likes || [];
+      if (likes.includes(userId)) {
+        await updateDoc(postRef, { likes: arrayRemove(userId) });
+        return { liked: false, likeCount: likes.length - 1 };
+      } else {
+        await updateDoc(postRef, { likes: arrayUnion(userId) });
+        return { liked: true, likeCount: likes.length + 1 };
+      }
+    }
+    return false;
+  } catch (e) {
+    console.error("Error toggling like:", e);
+    return false;
+  }
+}
+
+export async function fetchComments(roomId, postId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId) return [];
+
+  try {
+    const commentsRef = collection(db, 'rooms', roomId, 'posts', postId, 'comments');
+    const querySnapshot = await getDocs(commentsRef);
+    const comments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort by createdAt ascending (oldest first)
+    return comments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  } catch (e) {
+    console.error("Error fetching comments:", e);
+    return [];
+  }
+}
+
+export async function addComment(roomId, postId, userId, userName, content) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId || !userId || !content) return null;
+
+  try {
+    const commentsRef = collection(db, 'rooms', roomId, 'posts', postId, 'comments');
+    const commentData = {
+      authorId: userId,
+      authorName: userName,
+      content,
+      createdAt: new Date().toISOString()
+    };
+    const newDoc = await addDoc(commentsRef, commentData);
+    
+    // Increment comment count on post
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    await updateDoc(postRef, { commentCount: increment(1) }).catch(() => {});
+
+    return { id: newDoc.id, ...commentData };
+  } catch (e) {
+    console.error("Error adding comment:", e);
+    return null;
+  }
+}
+
+export async function deleteComment(roomId, postId, commentId) {
+  const { isConfigured, db } = initFirebase();
+  if (!isConfigured || !db || !roomId || !postId || !commentId) return false;
+
+  try {
+    const commentRef = doc(db, 'rooms', roomId, 'posts', postId, 'comments', commentId);
+    await deleteDoc(commentRef);
+
+    // Decrement comment count on post
+    const postRef = doc(db, 'rooms', roomId, 'posts', postId);
+    await updateDoc(postRef, { commentCount: increment(-1) }).catch(() => {});
+
+    return true;
+  } catch (e) {
+    console.error("Error deleting comment:", e);
+    return false;
+  }
+}
