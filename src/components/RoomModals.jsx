@@ -449,19 +449,16 @@ export function RoomModals({
                   </div>
                 </div>
 
-                <div style={{ padding: '0.75rem', backgroundColor: '#f8fafc', border: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                <div style={{ padding: '0.75rem 1rem', backgroundColor: '#f8fafc', border: '2px solid var(--border-main)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}>
                     <input 
                       type="checkbox"
                       checked={settingsAllowGuestView}
                       onChange={e => setSettingsAllowGuestView(e.target.checked)}
                       style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                     />
-                    비회원/미참여자의 시간표 & 게시판 탐색 허용
+                    {t('allow_guest_browse')}
                   </label>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1.5rem' }}>
-                    체크 해제 시 방에 참여한 정회원만 시간표와 게시판을 열람할 수 있습니다.
-                  </p>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-main)' }}>
