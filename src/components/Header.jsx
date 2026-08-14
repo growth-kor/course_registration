@@ -74,11 +74,11 @@ export function Header({
               className="btn"
               onClick={() => onTabChange('personal')}
               style={{
-                backgroundColor: activeTab === 'personal' ? 'var(--text-main)' : 'white',
-                color: activeTab === 'personal' ? '#ffffff' : 'var(--text-main)',
+                backgroundColor: activeTab === 'personal' ? '#f1f5f9' : 'white',
+                color: 'var(--text-main)',
                 border: '2px solid var(--border-main)',
                 boxShadow: activeTab === 'personal' ? 'none' : 'var(--shadow-hard-sm)',
-                transform: activeTab === 'personal' ? 'none' : 'translate(-2px, -2px)',
+                transform: activeTab === 'personal' ? 'translate(2px, 2px)' : 'none',
                 fontWeight: '900',
                 padding: '0.5rem 1rem',
                 fontSize: '1rem',
@@ -91,11 +91,11 @@ export function Header({
               className="btn"
               onClick={() => onTabChange('shared')}
               style={{
-                backgroundColor: activeTab === 'shared' ? 'var(--text-main)' : 'white',
-                color: activeTab === 'shared' ? '#ffffff' : 'var(--text-main)',
+                backgroundColor: activeTab === 'shared' ? '#f1f5f9' : 'white',
+                color: 'var(--text-main)',
                 border: '2px solid var(--border-main)',
                 boxShadow: activeTab === 'shared' ? 'none' : 'var(--shadow-hard-sm)',
-                transform: activeTab === 'shared' ? 'none' : 'translate(-2px, -2px)',
+                transform: activeTab === 'shared' ? 'translate(2px, 2px)' : 'none',
                 fontWeight: '900',
                 padding: '0.5rem 1rem',
                 fontSize: '1rem',

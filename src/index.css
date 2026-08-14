@@ -228,29 +228,32 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--text-main);
-  color: #ffffff;
+  background-color: #ffffff;
+  color: var(--text-main);
+  border: 2px solid var(--border-main);
 }
 .btn-primary:hover {
-  background-color: #333333;
-  color: #ffffff;
+  background-color: #f1f5f9;
+  color: var(--text-main);
 }
 
 .btn-accent {
-  background-color: #e2e8f0;
+  background-color: #ffffff;
   color: var(--text-main);
+  border: 2px solid var(--border-main);
 }
 .btn-accent:hover {
-  background-color: #cbd5e1;
+  background-color: #f1f5f9;
 }
 
 .btn-danger {
-  background-color: var(--text-main);
-  color: #ffffff;
+  background-color: #ffffff;
+  color: var(--text-main);
+  border: 2px solid var(--border-main);
 }
 .btn-danger:hover {
-  background-color: #333333;
-  color: #ffffff;
+  background-color: #fee2e2;
+  color: #ef4444;
 }
 
 .btn-sm {

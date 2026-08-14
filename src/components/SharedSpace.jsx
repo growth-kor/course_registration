@@ -20,7 +20,7 @@ function SharedSpaceContent() {
     user, plans, onRequireLogin, onOpenProfileSettings, firebaseStatus,
     rooms, publicRooms, sidebarTab, setSidebarTab,
     loading, loadingExplore, activeRoom, setActiveRoom,
-    roomTab, setRoomTab, boardView, toastMessage,
+    roomTab, setRoomTab, boardView, setBoardView, toastMessage,
     setShowCreateModal, setShowJoinModal,
     setSharedPlanIdToJoin
   } = useSharedSpace();
@@ -325,16 +325,34 @@ function SharedSpaceContent() {
               
             <div style={{ display: 'flex', gap: '1rem', flex: 1, justifyContent: 'center' }}>
               <button 
-                className={`btn ${roomTab === 'schedule' ? 'btn-primary' : ''}`}
+                className="btn"
                 onClick={() => setRoomTab('schedule')}
-                style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', boxShadow: roomTab === 'schedule' ? 'none' : 'var(--shadow-hard-sm)', transform: roomTab === 'schedule' ? 'translate(2px, 2px)' : 'none' }}
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  fontWeight: 'bold', 
+                  backgroundColor: roomTab === 'schedule' ? '#f1f5f9' : 'white',
+                  boxShadow: roomTab === 'schedule' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: roomTab === 'schedule' ? 'translate(2px, 2px)' : 'none' 
+                }}
               >
                 <Calendar size={18} /> 시간표
               </button>
               <button 
-                className={`btn ${roomTab === 'board' ? 'btn-primary' : ''}`}
+                className="btn"
                 onClick={() => setRoomTab('board')}
-                style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', boxShadow: roomTab === 'board' ? 'none' : 'var(--shadow-hard-sm)', transform: roomTab === 'board' ? 'translate(2px, 2px)' : 'none' }}
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  fontWeight: 'bold', 
+                  backgroundColor: roomTab === 'board' ? '#f1f5f9' : 'white',
+                  boxShadow: roomTab === 'board' ? 'none' : 'var(--shadow-hard-sm)', 
+                  transform: roomTab === 'board' ? 'translate(2px, 2px)' : 'none' 
+                }}
               >
                 <MessageSquare size={18} /> 게시판
               </button>

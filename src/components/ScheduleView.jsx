@@ -211,8 +211,8 @@ export function ScheduleView() {
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       <div style={{ width: '250px', borderRight: '2px solid var(--border-main)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
-        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'var(--text-main)', color: '#ffffff' }}>
-          <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-main)', backgroundColor: 'white', color: 'var(--text-main)' }}>
+          <h3 style={{ margin: 0, fontWeight: '900', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-main)' }}>
             <Users size={18} /> 참여 멤버 ({activeRoom.memberIds?.length || 0})
           </h3>
         </div>
@@ -223,8 +223,8 @@ export function ScheduleView() {
               width: '100%',
               padding: '1rem',
               textAlign: 'left',
-              background: activeMemberId === '__all__' ? 'var(--text-main)' : 'transparent',
-              color: activeMemberId === '__all__' ? 'white' : 'var(--text-main)',
+              background: activeMemberId === '__all__' ? '#f1f5f9' : 'transparent',
+              color: 'var(--text-main)',
               border: 'none',
               borderBottom: '2px solid var(--border-main)',
               cursor: 'pointer',
@@ -233,7 +233,8 @@ export function ScheduleView() {
               transition: 'all 0.1s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              boxShadow: activeMemberId === '__all__' ? 'inset 4px 0 0 var(--text-main)' : 'none'
             }}
           >
             전체 멤버 겹쳐보기
